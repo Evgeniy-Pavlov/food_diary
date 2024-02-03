@@ -20,7 +20,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from diary.api.views import UserLoginView, UserLogoutView, UserRegisterView, FoodSearchView
+from diary.api.views import UserLoginView, UserLogoutView, UserRegisterView, FoodSearchView, UserFoodAddView, UserStatAddView
 
 
 schema_view = get_schema_view(
@@ -44,5 +44,7 @@ urlpatterns = [
     path('api/auth/', TokenObtainPairView.as_view(), name='auth'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/register/', UserRegisterView.as_view(), name='user-create'),
-    path('api/search/food', FoodSearchView.as_view(), name='search_food')
+    path('api/search/food', FoodSearchView.as_view(), name='search_food'),
+    path('api/user/foodstat/add', UserFoodAddView.as_view(), name='food_add'),
+    path('api/user/userstat/add', UserStatAddView.as_view(), name='user_calories_food_add')
 ]

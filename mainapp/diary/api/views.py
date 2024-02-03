@@ -10,9 +10,9 @@ from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth.views import LoginView, LogoutView
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from diary.models import UserBase, DirectoryFood
+from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat
 from django.db.utils import IntegrityError
-from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer
+from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer, UserFoodDaySerializer, UserStatAddSerializer
 
 CONFIG = dotenv_values(".env")
 
@@ -37,10 +37,10 @@ class FoodSearchView(APIView):
 
     @swagger_auto_schema(query_serializer=SearchQueryParamSerializer, 
                             manual_parameters=[openapi.Parameter(name='name', in_=openapi.IN_QUERY,
-                            description='Substring header question or body',
+                            description='Name of food',
                             type=openapi.TYPE_STRING,
                             required=True), openapi.Parameter(name='lang', in_=openapi.IN_QUERY,
-                            description='Tag related question',
+                            description='Language',
                             type=openapi.TYPE_STRING,
                             required=True)])
     def get(self, request):
@@ -59,7 +59,6 @@ class FoodSearchView(APIView):
                 for i in data['dishes']:
                     try:
                         i_format = self.item_parse(i)
-                        print(i_format)
                         food_dir = DirectoryFood(name=i_format['name'], caloric=i_format['caloric'], fat=i_format['fat'],\
                              carbon=i_format['carbon'], protein=i_format['protein'])
                         food_dir.save()
@@ -79,3 +78,30 @@ class FoodSearchView(APIView):
                 result[i[0]] = i[1]
         return result
 
+class UserFoodAddView(CreateAPIView):
+    """Представление добавления пользовательской еды."""
+    queryset = UserFoodDay.objects.all()
+    serializer_class = UserFoodDaySerializer
+
+class UserStatAddView(APIView):
+    """Представление добавления количества калорий за день."""
+    model = UserStat
+    serializer_class= UserStatAddSerializer
+
+    @swagger_auto_schema(
+                            request_body=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                required= ['user', 'calories_burned'],
+                                properties=  {
+                                    'user' : openapi.Schema(type=openapi.TYPE_INTEGER), 
+                                    'calories_burned' : openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'date': openapi.Schema(type=openapi.TYPE_STRING)
+                                }
+                            ))
+    def post(self, request):
+        stat = UserStat.objects.filter(user=UserBase.objects.get(id=request.data['user']), date=request.data['date'])
+        if len(stat):
+            return Response({'success': 'User added'}, status=HTTPStatus.OK)
+        else:
+            result = UserStat.objects.create(user=UserBase.objects.get(id=request.data['user']), calories_burned=request.data['calories_burned'])
+            return Response(SearchFoodSerializer(result, many=True).data)
