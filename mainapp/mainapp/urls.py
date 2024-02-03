@@ -15,17 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
-from diary.api.views import UserLoginView, UserLogoutView
+from diary.api.views import UserLoginView, UserLogoutView, UserRegister
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="Hasker API",
+      title="Diary API",
       default_version='v1',
-      description="Hasker description",
+      description="Diary description",
       license=openapi.License(name="BSD License"),
    ),
    public=True,
@@ -39,4 +40,7 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('login/', UserLoginView.as_view()),
     path('logout/', UserLogoutView.as_view()),
+    path('api/auth/', TokenObtainPairView.as_view(), name='auth'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/register/', UserRegister.as_view(), name='user-create')
 ]
