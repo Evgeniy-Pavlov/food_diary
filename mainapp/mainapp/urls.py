@@ -19,8 +19,9 @@ from django.urls import path, include
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
-from diary.api.views import UserLoginView, UserLogoutView, UserRegister
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from diary.api.views import UserLoginView, UserLogoutView, UserRegisterView, FoodSearchView
+
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -42,5 +43,6 @@ urlpatterns = [
     path('logout/', UserLogoutView.as_view()),
     path('api/auth/', TokenObtainPairView.as_view(), name='auth'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/register/', UserRegister.as_view(), name='user-create')
+    path('api/register/', UserRegisterView.as_view(), name='user-create'),
+    path('api/search/food', FoodSearchView.as_view(), name='search_food')
 ]
