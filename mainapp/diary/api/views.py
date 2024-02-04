@@ -101,7 +101,10 @@ class UserStatAddView(APIView):
     def post(self, request):
         stat = UserStat.objects.filter(user=UserBase.objects.get(id=request.data['user']), date=request.data['date'])
         if len(stat):
-            return Response({'success': 'User added'}, status=HTTPStatus.OK)
+            result = UserStat.objects.get(user=UserBase.objects.get(id=request.data['user']), date=request.data['date'])
+            result.calories_burned += request.data['calories_burned']
+            result.save()
+            return Response(UserStatAddSerializer(result, many=False).data)
         else:
             result = UserStat.objects.create(user=UserBase.objects.get(id=request.data['user']), calories_burned=request.data['calories_burned'])
-            return Response(SearchFoodSerializer(result, many=True).data)
+            return Response(UserStatAddSerializer(result, many=False).data)
