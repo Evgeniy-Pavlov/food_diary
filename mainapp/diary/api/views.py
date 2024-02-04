@@ -12,7 +12,8 @@ from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat
 from django.db.utils import IntegrityError
-from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer, UserFoodDaySerializer, UserStatAddSerializer
+from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer, UserFoodDaySerializer, \
+     UserStatAddSerializer, DirectoryFoodUserCreateSerializer
 
 CONFIG = dotenv_values(".env")
 
@@ -108,3 +109,7 @@ class UserStatAddView(APIView):
         else:
             result = UserStat.objects.create(user=UserBase.objects.get(id=request.data['user']), calories_burned=request.data['calories_burned'])
             return Response(UserStatAddSerializer(result, many=False).data)
+
+class DirectoryFoodUserCreateView(CreateAPIView):
+    model = DirectoryFood
+    serializer_class = DirectoryFoodUserCreateSerializer

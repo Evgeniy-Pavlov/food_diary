@@ -35,3 +35,8 @@ class UserStatAddSerializer(ModelSerializer):
     class Meta:
         model = UserStat
         fields = ('user', 'date', 'calories_burned')
+
+class DirectoryFoodUserCreateSerializer(ModelSerializer):
+    class Meta:
+        model = DirectoryFood
+        fields = ('name', 'caloric', 'fat', 'carbon', 'protein', 'user_create')
