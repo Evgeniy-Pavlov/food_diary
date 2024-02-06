@@ -38,3 +38,11 @@ class UserFoodDay(models.Model):
 
     class Meta:
         verbose_name_plural = 'UserFoodDay'
+
+class DirectoryIngredients(models.Model):
+    name = models.CharField(unique=True, max_length=50)
+    caloric = models.IntegerField(default=0)
+    fat = models.IntegerField(default=0)
+    carbon = models.IntegerField(default=0)
+    protein = models.IntegerField(default=0)
+    user_create = models.ForeignKey(UserBase, on_delete=models.SET_NULL, null=True)

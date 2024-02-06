@@ -10,10 +10,10 @@ from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth.views import LoginView, LogoutView
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat
+from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients
 from django.db.utils import IntegrityError
 from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer, UserFoodDaySerializer, \
-     UserStatAddSerializer, DirectoryFoodUserCreateSerializer
+     UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer
 
 CONFIG = dotenv_values(".env")
 
@@ -113,3 +113,7 @@ class UserStatAddView(APIView):
 class DirectoryFoodUserCreateView(CreateAPIView):
     model = DirectoryFood
     serializer_class = DirectoryFoodUserCreateSerializer
+
+class DirectoryIngredientsCreateView(CreateAPIView):
+    model = DirectoryIngredients
+    serializer_class = DirectoryIngredientsCreateSerializer

@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer, CharField
-from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat
+from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients
 
 class UserRegisterSerializer(ModelSerializer):
     class Meta:
@@ -39,4 +39,9 @@ class UserStatAddSerializer(ModelSerializer):
 class DirectoryFoodUserCreateSerializer(ModelSerializer):
     class Meta:
         model = DirectoryFood
+        fields = ('name', 'caloric', 'fat', 'carbon', 'protein', 'user_create')
+
+class DirectoryIngredientsCreateSerializer(ModelSerializer):
+    class Meta:
+        model = DirectoryIngredients
         fields = ('name', 'caloric', 'fat', 'carbon', 'protein', 'user_create')
