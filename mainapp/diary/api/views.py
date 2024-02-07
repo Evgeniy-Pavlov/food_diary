@@ -8,12 +8,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth.views import LoginView, LogoutView
-from rest_framework.generics import CreateAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients
+from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients, RecipeFood
 from django.db.utils import IntegrityError
 from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer, UserFoodDaySerializer, \
-     UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer
+     UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer, RecipeFoodCreateSerializer
 
 CONFIG = dotenv_values(".env")
 
@@ -52,11 +52,11 @@ class FoodSearchView(APIView):
             req_result = requests.get(f'https://dietagram.p.rapidapi.com/apiFood.php?name={name_food}&lang={lang}', \
                 headers= {'X-RapidAPI-Key': CONFIG['X-RapidAPI-Key'], 'X-RapidAPI-Host': CONFIG['X-RapidAPI-Host']})
             if req_result.status_code != HTTPStatus.OK:
-                return Response({'error': f'Food not found'}, status=HTTPStatus.NOT_FOUND)
+                return Response({'error': 'Food not found'}, status=HTTPStatus.NOT_FOUND)
             else:
                 data = req_result.json()
                 if not len(data['dishes']):
-                    return Response({'error': f'Food not found'}, status=HTTPStatus.NOT_FOUND)
+                    return Response({'error': 'Food not found'}, status=HTTPStatus.NOT_FOUND)
                 for i in data['dishes']:
                     try:
                         i_format = self.item_parse(i)
@@ -117,3 +117,44 @@ class DirectoryFoodUserCreateView(CreateAPIView):
 class DirectoryIngredientsCreateView(CreateAPIView):
     model = DirectoryIngredients
     serializer_class = DirectoryIngredientsCreateSerializer
+
+class RecipeCreateView(APIView):
+    model = RecipeFood
+    serializer_class = RecipeFoodCreateSerializer
+
+    @swagger_auto_schema(
+                            request_body=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                required= ['food', 'ingredients', 'user'],
+                                properties=  {
+                                    'user': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'food' : openapi.Schema(type=openapi.TYPE_STRING), 
+                                    'ingredients': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_OBJECT, 
+                                    required= ['ingredient', 'gram'],
+                                        properties={  
+                                        'ingredient': openapi.Schema(type=openapi.TYPE_STRING),  
+                                        'gram': openapi.Schema(type=openapi.TYPE_INTEGER)}
+                                    )
+                                        
+                                        )
+                                        }
+                                    ))
+    def post(self, request):
+        try:
+            food = DirectoryFood.objects.get(name=request.data['food'])
+            return Response({'error': 'product was created previously'}, status=HTTPStatus.NOT_FOUND)
+        except DirectoryFood.DoesNotExist:
+            food = DirectoryFood.objects.create(name=request.data['food'], user_create=UserBase.objects.get(id=request.data['user']))
+            for ingredient in request.data['ingredients']:
+                try:
+                    ing = DirectoryIngredients.objects.get(name=ingredient['ingredient'])
+                    RecipeFood.objects.create(food=food, ingredient=ing)
+                    food.caloric += ing.caloric * (ingredient['gram'] * 0.01)
+                    food.fat += ing.fat * (ingredient['gram'] * 0.01)
+                    food.protein += ing.protein * (ingredient['gram'] * 0.01)
+                    food.carbon += ing.carbon * (ingredient['gram'] * 0.01)
+                    food.save()
+                    return Response({'success': 'recipe create'}, status=HTTPStatus.CREATED)
+                except DirectoryIngredients.DoesNotExist:
+                    return Response({'error': 'ingredient not found'}, status=HTTPStatus.NOT_FOUND)
+            

@@ -46,3 +46,9 @@ class DirectoryIngredients(models.Model):
     carbon = models.IntegerField(default=0)
     protein = models.IntegerField(default=0)
     user_create = models.ForeignKey(UserBase, on_delete=models.SET_NULL, null=True)
+
+class RecipeFood(models.Model):
+    food = models.ForeignKey(DirectoryFood, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(DirectoryIngredients, on_delete=models.CASCADE)
+    gram = models.IntegerField(default=0)
+

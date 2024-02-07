@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserBase, UserStat, DirectoryFood, UserFoodDay, DirectoryIngredients
+from .models import UserBase, UserStat, DirectoryFood, UserFoodDay, DirectoryIngredients, RecipeFood
 
 # Register your models here.
 @admin.register(UserBase)
@@ -21,3 +21,7 @@ class AdminUserFoodDay(admin.ModelAdmin):
 @admin.register(DirectoryIngredients)
 class AdminDirectoryIngredients(admin.ModelAdmin):
     list_display = ('id', 'name', 'caloric', 'fat', 'carbon', 'protein', 'user_create')
+
+@admin.register(RecipeFood)
+class AdminRecipeFood(admin.ModelAdmin):
+    list_display = ('id', 'food', 'ingredient', 'gram')
