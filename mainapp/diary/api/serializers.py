@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, CharField
+from rest_framework.serializers import ModelSerializer, CharField, DateField, IntegerField
 from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients, RecipeFood
 
 class UserRegisterSerializer(ModelSerializer):
@@ -62,6 +62,24 @@ class DirectoryIngredientsDeleteSerializer(ModelSerializer):
         fields = ('id', 'name')
 
 class RecipeFoodCreateSerializer(ModelSerializer):
+    class Meta:
+        model = RecipeFood
+        fields = ('food', 'ingredients', 'gram')
+
+class UserStatForDaySerializer(ModelSerializer):
+    class Meta:
+        model = UserStat
+        fields = ('id', 'user', 'date', 'calories_burned')
+
+class UserStatForDayQueryParamSerializer(ModelSerializer):
+    date = DateField(help_text='DateField for get stat on how much user eat', required=True)
+    user = IntegerField(help_text='User id', required=True)
+
+    class Meta:
+        model = UserStat
+        fields = ('date', 'user')
+
+class RecipeFoodDeleteSerializer(ModelSerializer):
     class Meta:
         model = RecipeFood
         fields = ('food', 'ingredients', 'gram')

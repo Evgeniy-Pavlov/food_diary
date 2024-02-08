@@ -8,13 +8,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth.views import LoginView, LogoutView
-from rest_framework.generics import CreateAPIView, DestroyAPIView
+from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients, RecipeFood
 from django.db.utils import IntegrityError
 from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer, UserFoodDaySerializer, \
      UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer, RecipeFoodCreateSerializer, \
-     UserFoodDayDeleteSerializer, DirectoryFoodUserDeleteSerializer, DirectoryIngredientsDeleteSerializer
+     UserFoodDayDeleteSerializer, DirectoryFoodUserDeleteSerializer, DirectoryIngredientsDeleteSerializer, UserStatForDaySerializer, \
+     UserStatForDayQueryParamSerializer, RecipeFoodDeleteSerializer \
 
 CONFIG = dotenv_values(".env")
 
@@ -117,22 +118,27 @@ class UserStatAddView(APIView):
             return Response(UserStatAddSerializer(result, many=False).data)
 
 class DirectoryFoodUserCreateView(CreateAPIView):
+    """Представление создания блюда в справочник еды"""
     model = DirectoryFood
     serializer_class = DirectoryFoodUserCreateSerializer
 
 class DirectoryFoodUserDeleteView(DestroyAPIView):
+    """Представление удаления блюда из справочника еды"""
     queryset = DirectoryFood.objects.all()
     serializer_class = DirectoryFoodUserDeleteSerializer
 
 class DirectoryIngredientsCreateView(CreateAPIView):
+    """Представление добавления ингредиента в справочник ингредиентов"""
     model = DirectoryIngredients
     serializer_class = DirectoryIngredientsCreateSerializer
 
 class DirectoryIngredientsDeleteView(DestroyAPIView):
+    """Предстваление удаления ингредиента из справочника ингредиентов"""
     queryset = DirectoryIngredients.objects.all()
     serializer_class = DirectoryIngredientsDeleteSerializer
 
 class RecipeCreateView(APIView):
+    """Представление создания рецепта"""
     model = RecipeFood
     serializer_class = RecipeFoodCreateSerializer
 
@@ -171,4 +177,26 @@ class RecipeCreateView(APIView):
                     return Response({'success': 'recipe create'}, status=HTTPStatus.CREATED)
                 except DirectoryIngredients.DoesNotExist:
                     return Response({'error': 'ingredient not found'}, status=HTTPStatus.NOT_FOUND)
-            
+
+class RecipeDeleteView(DestroyAPIView):
+    queryset = RecipeFood.objects.all()
+    serializer_class = RecipeFoodDeleteSerializer
+
+
+class UserGetStatForDay(APIView):
+    """Получение статистики пользователя за конкретный день."""
+    model = UserStat
+    serializer_class = UserStatForDaySerializer
+
+    @swagger_auto_schema(query_serializer=UserStatForDayQueryParamSerializer, 
+                            manual_parameters=[openapi.Parameter(name='date', in_=openapi.IN_QUERY,
+                            description='DateField for get stat on how much user eat',
+                            type=openapi.TYPE_STRING,
+                            required=True), openapi.Parameter(name='user', in_=openapi.IN_QUERY,
+                            description='User id',
+                            type=openapi.TYPE_INTEGER,
+                            required=True)])
+    def get(self, request):
+        result = UserStat.objects.get(date=request.query_params['date'], user=UserBase.objects.get(id=request.query_params['user']))
+        return Response(UserStatForDaySerializer(result, many=False).data)
+
