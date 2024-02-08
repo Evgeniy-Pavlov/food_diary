@@ -121,7 +121,7 @@ class DirectoryFoodUserCreateView(CreateAPIView):
     serializer_class = DirectoryFoodUserCreateSerializer
 
 class DirectoryFoodUserDeleteView(DestroyAPIView):
-    model = DirectoryFood
+    queryset = DirectoryFood.objects.all()
     serializer_class = DirectoryFoodUserDeleteSerializer
 
 class DirectoryIngredientsCreateView(CreateAPIView):
@@ -129,7 +129,7 @@ class DirectoryIngredientsCreateView(CreateAPIView):
     serializer_class = DirectoryIngredientsCreateSerializer
 
 class DirectoryIngredientsDeleteView(DestroyAPIView):
-    model = DirectoryIngredients
+    queryset = DirectoryIngredients.objects.all()
     serializer_class = DirectoryIngredientsDeleteSerializer
 
 class RecipeCreateView(APIView):

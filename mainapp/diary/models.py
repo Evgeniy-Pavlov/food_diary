@@ -47,8 +47,14 @@ class DirectoryIngredients(models.Model):
     protein = models.IntegerField(default=0)
     user_create = models.ForeignKey(UserBase, on_delete=models.SET_NULL, null=True)
 
+    class Meta:
+        verbose_name_plural = 'DirectoryIngredients'
+
 class RecipeFood(models.Model):
     food = models.ForeignKey(DirectoryFood, on_delete=models.CASCADE)
     ingredient = models.ForeignKey(DirectoryIngredients, on_delete=models.CASCADE)
     gram = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name_plural = 'RecipeFood'
 
