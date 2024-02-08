@@ -21,7 +21,8 @@ from drf_yasg import openapi
 from rest_framework import permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from diary.api.views import UserLoginView, UserLogoutView, UserRegisterView, FoodSearchView, UserFoodAddView, UserStatAddView,\
-     DirectoryFoodUserCreateView, DirectoryIngredientsCreateView, RecipeCreateView
+    DirectoryFoodUserCreateView, DirectoryIngredientsCreateView, RecipeCreateView, UserFoodDeleteView, DirectoryFoodUserDeleteView, \
+    DirectoryIngredientsDeleteView
 
 
 schema_view = get_schema_view(
@@ -47,8 +48,11 @@ urlpatterns = [
     path('api/register/', UserRegisterView.as_view(), name='user-create'),
     path('api/food/search/', FoodSearchView.as_view(), name='search_food'),
     path('api/user/foodstat/add/', UserFoodAddView.as_view(), name='food_add_in_stat'),
+    path('api/user/foodstat/delete/<int:pk>', UserFoodDeleteView.as_view(), name='food_delete_in_stat'),
     path('api/user/userstat/add/', UserStatAddView.as_view(), name='user_calories_food_add'),
     path('api/food/add/', DirectoryFoodUserCreateView.as_view(), name='create_food_user'),
+    path('api/food/delete/<int:pk>', DirectoryFoodUserDeleteView.as_view(), name='delete_food_user'),
     path('api/food/ingredients/add/', DirectoryIngredientsCreateView.as_view(), name = 'create_ingredients_in_the_directory'),
+    path('api/food/ingredients/delete/<int:pk>', DirectoryIngredientsDeleteView.as_view(), name = 'delete_ingredients_in_the_directory'),
     path('api/food/recipe-create/', RecipeCreateView.as_view(), name = 'create_recipe')
 ]

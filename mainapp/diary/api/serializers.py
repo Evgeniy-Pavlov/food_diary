@@ -29,22 +29,37 @@ class SearchQueryParamSerializer(ModelSerializer):
 class UserFoodDaySerializer(ModelSerializer):
     class Meta:
         model = UserFoodDay
-        fields = ('food', 'user', 'date')
+        fields = ('id', 'food', 'user', 'date')
+
+class UserFoodDayDeleteSerializer(ModelSerializer):
+    class Meta:
+        model = UserFoodDay
+        fields = ('id', 'food', 'date')
 
 class UserStatAddSerializer(ModelSerializer):
     class Meta:
         model = UserStat
-        fields = ('user', 'date', 'calories_burned')
+        fields = ('id', 'user', 'date', 'calories_burned')
 
 class DirectoryFoodUserCreateSerializer(ModelSerializer):
     class Meta:
         model = DirectoryFood
-        fields = ('name', 'caloric', 'fat', 'carbon', 'protein', 'user_create')
+        fields = ('id', 'name', 'caloric', 'fat', 'carbon', 'protein', 'user_create')
+
+class DirectoryFoodUserDeleteSerializer(ModelSerializer):
+    class Meta:
+        model = DirectoryFood
+        fields = ('id', 'name', 'caloric', 'fat', 'carbon', 'protein', 'user_create')
 
 class DirectoryIngredientsCreateSerializer(ModelSerializer):
     class Meta:
         model = DirectoryIngredients
-        fields = ('name', 'caloric', 'fat', 'carbon', 'protein', 'user_create')
+        fields = ('id', 'name', 'caloric', 'fat', 'carbon', 'protein', 'user_create')
+
+class DirectoryIngredientsDeleteSerializer(ModelSerializer):
+    class Meta:
+        model = DirectoryIngredients
+        fields = ('id', 'name')
 
 class RecipeFoodCreateSerializer(ModelSerializer):
     class Meta:

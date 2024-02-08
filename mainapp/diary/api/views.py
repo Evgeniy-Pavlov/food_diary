@@ -8,12 +8,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth.views import LoginView, LogoutView
-from rest_framework.generics import CreateAPIView, ListCreateAPIView
+from rest_framework.generics import CreateAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients, RecipeFood
 from django.db.utils import IntegrityError
 from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer, UserFoodDaySerializer, \
-     UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer, RecipeFoodCreateSerializer
+     UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer, RecipeFoodCreateSerializer, \
+     UserFoodDayDeleteSerializer, DirectoryFoodUserDeleteSerializer, DirectoryIngredientsDeleteSerializer
 
 CONFIG = dotenv_values(".env")
 
@@ -84,6 +85,11 @@ class UserFoodAddView(CreateAPIView):
     queryset = UserFoodDay.objects.all()
     serializer_class = UserFoodDaySerializer
 
+class UserFoodDeleteView(DestroyAPIView):
+    """Представление добавления пользовательской еды."""
+    queryset = UserFoodDay.objects.all()
+    serializer_class = UserFoodDayDeleteSerializer
+
 class UserStatAddView(APIView):
     """Представление добавления количества калорий за день."""
     model = UserStat
@@ -114,9 +120,17 @@ class DirectoryFoodUserCreateView(CreateAPIView):
     model = DirectoryFood
     serializer_class = DirectoryFoodUserCreateSerializer
 
+class DirectoryFoodUserDeleteView(DestroyAPIView):
+    model = DirectoryFood
+    serializer_class = DirectoryFoodUserDeleteSerializer
+
 class DirectoryIngredientsCreateView(CreateAPIView):
     model = DirectoryIngredients
     serializer_class = DirectoryIngredientsCreateSerializer
+
+class DirectoryIngredientsDeleteView(DestroyAPIView):
+    model = DirectoryIngredients
+    serializer_class = DirectoryIngredientsDeleteSerializer
 
 class RecipeCreateView(APIView):
     model = RecipeFood
