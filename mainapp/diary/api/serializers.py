@@ -71,6 +71,11 @@ class UserStatForDaySerializer(ModelSerializer):
         model = UserStat
         fields = ('id', 'user', 'date', 'calories_burned')
 
+class UserStatForPeriodSerializer(ModelSerializer):
+    class Meta:
+        model = UserStat
+        fields = ('id', 'user', 'date', 'calories_burned')
+
 class UserStatForDayQueryParamSerializer(ModelSerializer):
     date = DateField(help_text='DateField for get stat on how much user eat', required=True)
     user = IntegerField(help_text='User id', required=True)
@@ -78,6 +83,15 @@ class UserStatForDayQueryParamSerializer(ModelSerializer):
     class Meta:
         model = UserStat
         fields = ('date', 'user')
+
+class UserStatForPeriodQueryParamSerializer(ModelSerializer):
+    date_start = DateField(help_text='DateField for get stat on how much user eat', required=True)
+    date_end = DateField(help_text='DateField for get stat on how much user eat', required=True)
+    user = IntegerField(help_text='User id', required=True)
+
+    class Meta:
+        model = UserStat
+        fields = ('date_start', 'date_end', 'user')
 
 class RecipeFoodDeleteSerializer(ModelSerializer):
     class Meta:

@@ -15,7 +15,7 @@ from django.db.utils import IntegrityError
 from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer, UserFoodDaySerializer, \
      UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer, RecipeFoodCreateSerializer, \
      UserFoodDayDeleteSerializer, DirectoryFoodUserDeleteSerializer, DirectoryIngredientsDeleteSerializer, UserStatForDaySerializer, \
-     UserStatForDayQueryParamSerializer, RecipeFoodDeleteSerializer \
+     UserStatForDayQueryParamSerializer, RecipeFoodDeleteSerializer, UserStatForPeriodQueryParamSerializer, UserStatForPeriodSerializer \
 
 CONFIG = dotenv_values(".env")
 
@@ -183,7 +183,7 @@ class RecipeDeleteView(DestroyAPIView):
     serializer_class = RecipeFoodDeleteSerializer
 
 
-class UserGetStatForDay(APIView):
+class UserGetStatForDayView(APIView):
     """Получение статистики пользователя за конкретный день."""
     model = UserStat
     serializer_class = UserStatForDaySerializer
@@ -200,3 +200,23 @@ class UserGetStatForDay(APIView):
         result = UserStat.objects.get(date=request.query_params['date'], user=UserBase.objects.get(id=request.query_params['user']))
         return Response(UserStatForDaySerializer(result, many=False).data)
 
+class UserGetStatForPeriodView(APIView):
+    """Получение статистики пользователя за период."""
+    model = UserStat
+    serializer_class = UserStatForPeriodSerializer
+
+    @swagger_auto_schema(query_serializer=UserStatForPeriodQueryParamSerializer, 
+                            manual_parameters=[openapi.Parameter(name='date_start', in_=openapi.IN_QUERY,
+                            description='Start DateField for get stat on how much user eat',
+                            type=openapi.TYPE_STRING,
+                            required=True), openapi.Parameter(name='date_end', in_=openapi.IN_QUERY,
+                            description='End DateField for get stat on how much user eat',
+                            type=openapi.TYPE_STRING,
+                            required=True), openapi.Parameter(name='user', in_=openapi.IN_QUERY,
+                            description='User id',
+                            type=openapi.TYPE_INTEGER,
+                            required=True)])
+    def get(self, request):
+        result = UserStat.objects.filter(date__range=(request.query_params['date_start'], request.query_params['date_end']),
+        user=UserBase.objects.get(id=request.query_params['user']))
+        return Response(UserStatForPeriodSerializer(result, many=True).data)
