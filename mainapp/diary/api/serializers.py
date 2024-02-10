@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, CharField, DateField, IntegerField
+from rest_framework.serializers import ModelSerializer, CharField, DateField, IntegerField, BooleanField
 from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients, RecipeFood
 
 class UserRegisterSerializer(ModelSerializer):
@@ -99,10 +99,11 @@ class UserStatForPeriodQueryParamSerializer(ModelSerializer):
     date_start = DateField(help_text='DateField for get stat on how much user eat', required=True)
     date_end = DateField(help_text='DateField for get stat on how much user eat', required=True)
     user = IntegerField(help_text='User id', required=True)
+    csv_file = BooleanField(help_text='Return csv file', required=False)
 
     class Meta:
         model = UserStat
-        fields = ('date_start', 'date_end', 'user')
+        fields = ('date_start', 'date_end', 'user', 'csv_file')
 
 class RecipeFoodDeleteSerializer(ModelSerializer):
     class Meta:

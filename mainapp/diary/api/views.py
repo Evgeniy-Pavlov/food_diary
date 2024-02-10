@@ -1,9 +1,11 @@
 import os
+import csv
 from http import HTTPStatus
 import requests
 from dotenv import dotenv_values
 from drf_yasg import openapi
 from django.db.models import Q
+from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
@@ -240,11 +242,26 @@ class UserGetStatForPeriodView(APIView):
                             required=True), openapi.Parameter(name='user', in_=openapi.IN_QUERY,
                             description='User id',
                             type=openapi.TYPE_INTEGER,
-                            required=True)])
+                            required=True), openapi.Parameter(name='csv_file', in_=openapi.IN_QUERY,
+                            description='User id',
+                            type=openapi.TYPE_BOOLEAN,
+                            required=False)])
     def get(self, request):
         result = UserStat.objects.filter(date__range=(request.query_params['date_start'], request.query_params['date_end']),
-        user=UserBase.objects.get(id=request.query_params['user']))
-        return Response(UserStatForPeriodSerializer(result, many=True).data)
+            user=UserBase.objects.get(id=request.query_params['user']))
+        if 'csv_file' in request.query_params and request.query_params['csv_file'] == 'true':
+            start_date = request.query_params['date_start']
+            date_end = request.query_params['date_end']
+            response = HttpResponse(content_type="text/csv", headers={"Content-Disposition": f'attachment; filename="calories_stat_for\
+            _period_{start_date}-{date_end}.csv"'},)
+            writer = csv.writer(response)
+            writer.writerow(['id', 'user', 'date', 'calories_burned'])
+            for i in result:
+                writer.writerow([i.id, i.user, i.date, i.calories_burned])
+            return response
+        else:
+            return Response(UserStatForPeriodSerializer(result, many=True).data)
+
 
 class UserFoodDayStatView(APIView):
     """Представление получения блюд пользователя за день."""
@@ -282,8 +299,22 @@ class UserFoodDayStatPeriodView(APIView):
                             required=True), openapi.Parameter(name='user', in_=openapi.IN_QUERY,
                             description='User id',
                             type=openapi.TYPE_INTEGER,
-                            required=True)])
+                            required=True), openapi.Parameter(name='csv_file', in_=openapi.IN_QUERY,
+                            description='User id',
+                            type=openapi.TYPE_BOOLEAN,
+                            required=False)])
     def get(self, request):
         result = UserFoodDay.objects.filter(date__range=(request.query_params['date_start'], request.query_params['date_end']),
          user=UserBase.objects.get(id=request.query_params['user'])).select_related('food')
-        return Response(UserFoodDaySerializer(result, many=True).data)
+        if 'csv_file' in request.query_params and request.query_params['csv_file'] == 'true':
+            start_date = request.query_params['date_start']
+            date_end = request.query_params['date_end']
+            response = HttpResponse(content_type="text/csv", headers={"Content-Disposition": f'attachment; filename="userfoodday_stat_for\
+            _period_{start_date}-{date_end}.csv"'},)
+            writer = csv.writer(response)
+            writer.writerow(['id', 'food id', 'username', 'date', 'name of food', 'caloric', 'fat', 'protein', 'carbon'])
+            for i in result:
+                writer.writerow([i.id, i.food.id, i.user, i.date, i.food.name, i.food.caloric, i.food.fat, i.food.protein, i.food.carbon])
+            return response
+        else:
+            return Response(UserFoodDaySerializer(result, many=True).data)
