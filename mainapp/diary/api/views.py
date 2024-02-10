@@ -1,14 +1,20 @@
 import os
+import io
 import csv
 from http import HTTPStatus
 import requests
 from dotenv import dotenv_values
 from drf_yasg import openapi
 from django.db.models import Q
-from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from django.http import HttpResponse, FileResponse
 from django.contrib.auth.views import LoginView, LogoutView
 from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -243,15 +249,18 @@ class UserGetStatForPeriodView(APIView):
                             description='User id',
                             type=openapi.TYPE_INTEGER,
                             required=True), openapi.Parameter(name='csv_file', in_=openapi.IN_QUERY,
-                            description='User id',
+                            description='return csv file',
+                            type=openapi.TYPE_BOOLEAN,
+                            required=False), openapi.Parameter(name='pdf_file', in_=openapi.IN_QUERY,
+                            description='return pdf file',
                             type=openapi.TYPE_BOOLEAN,
                             required=False)])
     def get(self, request):
         result = UserStat.objects.filter(date__range=(request.query_params['date_start'], request.query_params['date_end']),
             user=UserBase.objects.get(id=request.query_params['user']))
+        start_date = request.query_params['date_start']
+        date_end = request.query_params['date_end']
         if 'csv_file' in request.query_params and request.query_params['csv_file'] == 'true':
-            start_date = request.query_params['date_start']
-            date_end = request.query_params['date_end']
             response = HttpResponse(content_type="text/csv", headers={"Content-Disposition": f'attachment; filename="calories_stat_for\
             _period_{start_date}-{date_end}.csv"'},)
             writer = csv.writer(response)
@@ -259,6 +268,22 @@ class UserGetStatForPeriodView(APIView):
             for i in result:
                 writer.writerow([i.id, i.user, i.date, i.calories_burned])
             return response
+        elif 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
+            buf = io.BytesIO()
+            canv = canvas.Canvas(buf, pagesize=letter, bottomup=0)
+            textob = canv.beginText()
+            textob.setTextOrigin(inch, inch)
+            pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
+            textob.setFont('Arial', 14)
+            textob.textLine(f'Your calorie report for the period from {start_date} to {date_end}')
+            textob.textLine(f'id | user_id | date | callories')
+            for i in result:
+                textob.textLine(f'{i.id} | {i.user} | {i.date} | {i.calories_burned}')
+            canv.drawText(textob)
+            canv.showPage()
+            canv.save()
+            buf.seek(0)
+            return FileResponse(buf, as_attachment=True, filename=f'calories_stat_for_period_{start_date}-{date_end}.pdf')
         else:
             return Response(UserStatForPeriodSerializer(result, many=True).data)
 
@@ -300,15 +325,18 @@ class UserFoodDayStatPeriodView(APIView):
                             description='User id',
                             type=openapi.TYPE_INTEGER,
                             required=True), openapi.Parameter(name='csv_file', in_=openapi.IN_QUERY,
-                            description='User id',
+                            description='return csv file',
+                            type=openapi.TYPE_BOOLEAN,
+                            required=False), openapi.Parameter(name='pdf_file', in_=openapi.IN_QUERY,
+                            description='return pdf file',
                             type=openapi.TYPE_BOOLEAN,
                             required=False)])
     def get(self, request):
         result = UserFoodDay.objects.filter(date__range=(request.query_params['date_start'], request.query_params['date_end']),
          user=UserBase.objects.get(id=request.query_params['user'])).select_related('food')
+        start_date = request.query_params['date_start']
+        date_end = request.query_params['date_end']
         if 'csv_file' in request.query_params and request.query_params['csv_file'] == 'true':
-            start_date = request.query_params['date_start']
-            date_end = request.query_params['date_end']
             response = HttpResponse(content_type="text/csv", headers={"Content-Disposition": f'attachment; filename="userfoodday_stat_for\
             _period_{start_date}-{date_end}.csv"'},)
             writer = csv.writer(response)
@@ -316,5 +344,21 @@ class UserFoodDayStatPeriodView(APIView):
             for i in result:
                 writer.writerow([i.id, i.food.id, i.user, i.date, i.food.name, i.food.caloric, i.food.fat, i.food.protein, i.food.carbon])
             return response
+        elif 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
+            buf = io.BytesIO()
+            canv = canvas.Canvas(buf, pagesize=letter, bottomup=0)
+            textob = canv.beginText()
+            textob.setTextOrigin(inch, inch)
+            pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
+            textob.setFont('Arial', 14)
+            textob.textLine(f'Your report on dishes eaten during the period from {start_date} to {date_end}')
+            textob.textLine(f'id | food id | user id | date | food name | caloric | fat | protein | carbon')
+            for i in result:
+                textob.textLine(f'{i.id} | {i.food.id} | {i.user} | {i.date} | {i.food.name} | {i.food.caloric} | {i.food.fat} | {i.food.protein} | {i.food.carbon}')
+            canv.drawText(textob)
+            canv.showPage()
+            canv.save()
+            buf.seek(0)
+            return FileResponse(buf, as_attachment=True, filename=f'food_stat_for_period_{start_date}-{date_end}.pdf')
         else:
             return Response(UserFoodDaySerializer(result, many=True).data)

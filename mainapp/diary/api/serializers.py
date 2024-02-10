@@ -100,10 +100,11 @@ class UserStatForPeriodQueryParamSerializer(ModelSerializer):
     date_end = DateField(help_text='DateField for get stat on how much user eat', required=True)
     user = IntegerField(help_text='User id', required=True)
     csv_file = BooleanField(help_text='Return csv file', required=False)
+    pdf_file = BooleanField(help_text='Return pdf file', required=False)
 
     class Meta:
         model = UserStat
-        fields = ('date_start', 'date_end', 'user', 'csv_file')
+        fields = ('date_start', 'date_end', 'user', 'csv_file', 'pdf_file')
 
 class RecipeFoodDeleteSerializer(ModelSerializer):
     class Meta:
