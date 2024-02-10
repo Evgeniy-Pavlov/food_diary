@@ -27,6 +27,17 @@ class SearchQueryParamSerializer(ModelSerializer):
         fields = ('name', 'lang')
 
 class UserFoodDaySerializer(ModelSerializer):
+    name = CharField(source='food.name')
+    caloric = IntegerField(source='food.caloric')
+    fat = IntegerField(source='food.fat')
+    protein = IntegerField(source='food.protein')
+    carbon = IntegerField(source='food.carbon')
+    
+    class Meta:
+        model = UserFoodDay
+        fields = ('id', 'food', 'user', 'date', 'name', 'caloric', 'fat', 'protein', 'carbon')
+
+class UserFoodDayAddSerializer(ModelSerializer):
     class Meta:
         model = UserFoodDay
         fields = ('id', 'food', 'user', 'date')

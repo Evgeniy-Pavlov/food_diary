@@ -22,7 +22,7 @@ from rest_framework import permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from diary.api.views import UserLoginView, UserLogoutView, UserRegisterView, FoodSearchView, UserFoodAddView, UserStatAddView,\
     DirectoryFoodUserCreateView, DirectoryIngredientsCreateView, RecipeCreateView, UserFoodDeleteView, DirectoryFoodUserDeleteView, \
-    DirectoryIngredientsDeleteView, UserGetStatForDayView, RecipeDeleteView, UserGetStatForPeriodView
+    DirectoryIngredientsDeleteView, UserGetStatForDayView, RecipeDeleteView, UserGetStatForPeriodView, UserFoodDayStatView, UserFoodDayStatPeriodView \
 
 
 schema_view = get_schema_view(
@@ -48,6 +48,8 @@ urlpatterns = [
     path('api/register/', UserRegisterView.as_view(), name='user-create'),
     path('api/food/search/', FoodSearchView.as_view(), name='search_food'),
     path('api/user/foodstat/add/', UserFoodAddView.as_view(), name='food_add_in_stat'),
+    path('api/user/foodstat/day/', UserFoodDayStatView.as_view(), name='food_stat_for_day'),
+    path('api/user/foodstat/period/', UserFoodDayStatPeriodView.as_view(), name='food_stat_for_period'),
     path('api/user/foodstat/delete/<int:pk>', UserFoodDeleteView.as_view(), name='food_delete_in_stat'),
     path('api/user/userstat/add/', UserStatAddView.as_view(), name='user_calories_food_add'),
     path('api/food/add/', DirectoryFoodUserCreateView.as_view(), name='create_food_user'),

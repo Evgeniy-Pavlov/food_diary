@@ -15,23 +15,28 @@ from django.db.utils import IntegrityError
 from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer, UserFoodDaySerializer, \
      UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer, RecipeFoodCreateSerializer, \
      UserFoodDayDeleteSerializer, DirectoryFoodUserDeleteSerializer, DirectoryIngredientsDeleteSerializer, UserStatForDaySerializer, \
-     UserStatForDayQueryParamSerializer, RecipeFoodDeleteSerializer, UserStatForPeriodQueryParamSerializer, UserStatForPeriodSerializer \
+     UserStatForDayQueryParamSerializer, RecipeFoodDeleteSerializer, UserStatForPeriodQueryParamSerializer, UserStatForPeriodSerializer, \
+     UserFoodDayAddSerializer \
 
 CONFIG = dotenv_values(".env")
+
 
 class UserLoginView(LoginView):
     """Представление страницы авторизации"""
     model = UserBase
     success_url = '/'
 
+
 class UserLogoutView(LogoutView):
     """Представление выхода авторизованного пользователя"""
     model = UserBase
+
 
 class UserRegisterView(CreateAPIView):
     """Представление регистрации пользователя"""
     queryset = UserBase.objects.all()
     serializer_class = UserRegisterSerializer
+
 
 class FoodSearchView(APIView):
     """Представление поиска еды для авторизованного пользователя."""
@@ -81,20 +86,26 @@ class FoodSearchView(APIView):
                 result[i[0]] = i[1]
         return result
 
+
 class UserFoodAddView(CreateAPIView):
     """Представление добавления пользовательской еды."""
     queryset = UserFoodDay.objects.all()
-    serializer_class = UserFoodDaySerializer
+    serializer_class = UserFoodDayAddSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
 
 class UserFoodDeleteView(DestroyAPIView):
     """Представление добавления пользовательской еды."""
     queryset = UserFoodDay.objects.all()
     serializer_class = UserFoodDayDeleteSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
 
 class UserStatAddView(APIView):
     """Представление добавления количества калорий за день."""
     model = UserStat
     serializer_class= UserStatAddSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
 
     @swagger_auto_schema(
                             request_body=openapi.Schema(
@@ -117,30 +128,40 @@ class UserStatAddView(APIView):
             result = UserStat.objects.create(user=UserBase.objects.get(id=request.data['user']), calories_burned=request.data['calories_burned'])
             return Response(UserStatAddSerializer(result, many=False).data)
 
+
 class DirectoryFoodUserCreateView(CreateAPIView):
     """Представление создания блюда в справочник еды"""
     model = DirectoryFood
     serializer_class = DirectoryFoodUserCreateSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
 
 class DirectoryFoodUserDeleteView(DestroyAPIView):
     """Представление удаления блюда из справочника еды"""
     queryset = DirectoryFood.objects.all()
     serializer_class = DirectoryFoodUserDeleteSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
 
 class DirectoryIngredientsCreateView(CreateAPIView):
     """Представление добавления ингредиента в справочник ингредиентов"""
     model = DirectoryIngredients
     serializer_class = DirectoryIngredientsCreateSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
 
 class DirectoryIngredientsDeleteView(DestroyAPIView):
     """Предстваление удаления ингредиента из справочника ингредиентов"""
     queryset = DirectoryIngredients.objects.all()
     serializer_class = DirectoryIngredientsDeleteSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
 
 class RecipeCreateView(APIView):
     """Представление создания рецепта"""
     model = RecipeFood
     serializer_class = RecipeFoodCreateSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
 
     @swagger_auto_schema(
                             request_body=openapi.Schema(
@@ -181,12 +202,14 @@ class RecipeCreateView(APIView):
 class RecipeDeleteView(DestroyAPIView):
     queryset = RecipeFood.objects.all()
     serializer_class = RecipeFoodDeleteSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
 
 
 class UserGetStatForDayView(APIView):
     """Получение статистики пользователя за конкретный день."""
     model = UserStat
     serializer_class = UserStatForDaySerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
 
     @swagger_auto_schema(query_serializer=UserStatForDayQueryParamSerializer, 
                             manual_parameters=[openapi.Parameter(name='date', in_=openapi.IN_QUERY,
@@ -200,10 +223,12 @@ class UserGetStatForDayView(APIView):
         result = UserStat.objects.get(date=request.query_params['date'], user=UserBase.objects.get(id=request.query_params['user']))
         return Response(UserStatForDaySerializer(result, many=False).data)
 
+
 class UserGetStatForPeriodView(APIView):
     """Получение статистики пользователя за период."""
     model = UserStat
     serializer_class = UserStatForPeriodSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
 
     @swagger_auto_schema(query_serializer=UserStatForPeriodQueryParamSerializer, 
                             manual_parameters=[openapi.Parameter(name='date_start', in_=openapi.IN_QUERY,
@@ -220,3 +245,45 @@ class UserGetStatForPeriodView(APIView):
         result = UserStat.objects.filter(date__range=(request.query_params['date_start'], request.query_params['date_end']),
         user=UserBase.objects.get(id=request.query_params['user']))
         return Response(UserStatForPeriodSerializer(result, many=True).data)
+
+class UserFoodDayStatView(APIView):
+    """Представление получения блюд пользователя за день."""
+    model = UserFoodDay
+    serializer_class = UserFoodDaySerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    @swagger_auto_schema(query_serializer=UserStatForDayQueryParamSerializer, 
+                            manual_parameters=[openapi.Parameter(name='date', in_=openapi.IN_QUERY,
+                            description='DateField for get stat on how much user eat',
+                            type=openapi.TYPE_STRING,
+                            required=True), openapi.Parameter(name='user', in_=openapi.IN_QUERY,
+                            description='User id',
+                            type=openapi.TYPE_INTEGER,
+                            required=True)])
+    def get(self, request):
+        result = UserFoodDay.objects.filter(date=request.query_params['date'], user=UserBase.objects.get(id=request.query_params['user']))\
+            .select_related('food')
+        return Response(UserFoodDaySerializer(result, many=True).data)
+
+
+class UserFoodDayStatPeriodView(APIView):
+    """Представление получения блюд пользователя за период."""
+    model = UserFoodDay
+    serializer_class = UserFoodDaySerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    @swagger_auto_schema(query_serializer=UserStatForPeriodQueryParamSerializer, 
+                            manual_parameters=[openapi.Parameter(name='date_start', in_=openapi.IN_QUERY,
+                            description='Start DateField for get stat on how much user eat',
+                            type=openapi.TYPE_STRING,
+                            required=True), openapi.Parameter(name='date_end', in_=openapi.IN_QUERY,
+                            description='End DateField for get stat on how much user eat',
+                            type=openapi.TYPE_STRING,
+                            required=True), openapi.Parameter(name='user', in_=openapi.IN_QUERY,
+                            description='User id',
+                            type=openapi.TYPE_INTEGER,
+                            required=True)])
+    def get(self, request):
+        result = UserFoodDay.objects.filter(date__range=(request.query_params['date_start'], request.query_params['date_end']),
+         user=UserBase.objects.get(id=request.query_params['user'])).select_related('food')
+        return Response(UserFoodDaySerializer(result, many=True).data)
