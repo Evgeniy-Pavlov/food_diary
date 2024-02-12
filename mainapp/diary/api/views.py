@@ -228,8 +228,11 @@ class UserGetStatForDayView(APIView):
                             type=openapi.TYPE_INTEGER,
                             required=True)])
     def get(self, request):
-        result = UserStat.objects.get(date=request.query_params['date'], user=UserBase.objects.get(id=request.query_params['user']))
-        return Response(UserStatForDaySerializer(result, many=False).data)
+        try:
+            result = UserStat.objects.get(date=request.query_params['date'], user=UserBase.objects.get(id=request.query_params['user']))
+            return Response(UserStatForDaySerializer(result, many=False).data)
+        except UserStat.DoesNotExist:
+            return Response({"user": request.query_params['user'], "date": request.query_params['date'], "calories_burned": 0}, status=HTTPStatus.NOT_FOUND)
 
 
 class UserGetStatForPeriodView(APIView):
