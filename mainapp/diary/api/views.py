@@ -16,7 +16,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from django.http import HttpResponse, FileResponse
 from django.contrib.auth.views import LoginView, LogoutView
-from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients, RecipeFood
 from django.db.utils import IntegrityError
@@ -24,7 +24,7 @@ from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQue
      UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer, RecipeFoodCreateSerializer, \
      UserFoodDayDeleteSerializer, DirectoryFoodUserDeleteSerializer, DirectoryIngredientsDeleteSerializer, UserStatForDaySerializer, \
      UserStatForDayQueryParamSerializer, RecipeFoodDeleteSerializer, UserStatForPeriodQueryParamSerializer, UserStatForPeriodSerializer, \
-     UserFoodDayAddSerializer \
+     UserFoodDayAddSerializer, UserChangePwdSerializer \
 
 CONFIG = dotenv_values(".env")
 
@@ -45,6 +45,22 @@ class UserRegisterView(CreateAPIView):
     queryset = UserBase.objects.all()
     serializer_class = UserRegisterSerializer
 
+
+class UserChangePasswordView(UpdateAPIView):
+    queryset = UserBase.objects.all()
+    serializer_class = UserChangePwdSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    def update(self, request, pk):
+        user = UserBase.objects.get(username = request.data['username'])
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            if not user.check_password(serializer.data.get("old_password")):
+                return Response({"error": ["old_password - Wrong password."]}, status=HTTPStatus.BAD_REQUEST)
+            user.set_password(serializer.data.get("new_password"))
+            user.save()
+            return Response({'success': 'Password change'}, status=HTTPStatus.OK)
+        return Response({"error": "Form is not valid"}, status=HTTPStatus.BAD_REQUEST)
 
 class FoodSearchView(APIView):
     """Представление поиска еды для авторизованного пользователя."""

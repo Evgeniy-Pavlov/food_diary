@@ -22,8 +22,8 @@ from rest_framework import permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from diary.api.views import UserLoginView, UserLogoutView, UserRegisterView, FoodSearchView, UserFoodAddView, UserStatAddView,\
     DirectoryFoodUserCreateView, DirectoryIngredientsCreateView, RecipeCreateView, UserFoodDeleteView, DirectoryFoodUserDeleteView, \
-    DirectoryIngredientsDeleteView, UserGetStatForDayView, RecipeDeleteView, UserGetStatForPeriodView, UserFoodDayStatView, UserFoodDayStatPeriodView \
-
+    DirectoryIngredientsDeleteView, UserGetStatForDayView, RecipeDeleteView, UserGetStatForPeriodView, UserFoodDayStatView, UserFoodDayStatPeriodView, \
+    UserChangePasswordView \
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -46,6 +46,7 @@ urlpatterns = [
     path('api/auth', TokenObtainPairView.as_view(), name='auth'),
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/register', UserRegisterView.as_view(), name='user-create'),
+    path('api/change-pwd/<int:pk>', UserChangePasswordView.as_view(), name='user change password'),
     path('api/food/search', FoodSearchView.as_view(), name='search_food'),
     path('api/user/foodstat/add', UserFoodAddView.as_view(), name='food_add_in_stat'),
     path('api/user/foodstat/day', UserFoodDayStatView.as_view(), name='food_stat_for_day'),
