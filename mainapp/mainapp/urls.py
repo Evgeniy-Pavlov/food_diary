@@ -19,7 +19,7 @@ from django.urls import path, include
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 from diary.api.views import UserLoginView, UserLogoutView, UserRegisterView, FoodSearchView, UserFoodAddView, UserStatAddView,\
     DirectoryFoodUserCreateView, DirectoryIngredientsCreateView, RecipeCreateView, UserFoodDeleteView, DirectoryFoodUserDeleteView, \
     DirectoryIngredientsDeleteView, UserGetStatForDayView, RecipeDeleteView, UserGetStatForPeriodView, UserFoodDayStatView, UserFoodDayStatPeriodView, \
@@ -44,6 +44,7 @@ urlpatterns = [
     path('login/', UserLoginView.as_view()),
     path('logout/', UserLogoutView.as_view()),
     path('api/auth', TokenObtainPairView.as_view(), name='auth'),
+    path('api/logout', TokenBlacklistView.as_view(), name= 'token_blacklist'),
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/register', UserRegisterView.as_view(), name='user-create'),
     path('api/change-pwd/<int:pk>', UserChangePasswordView.as_view(), name='user change password'),
