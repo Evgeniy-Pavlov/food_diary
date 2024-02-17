@@ -11,7 +11,7 @@
 <body onload="brython(1)">
     <nav class="navbar navbar-expand-lg bg-body-tertiary" style="background-color: #e3f2fd;">
         <div class="container-fluid">
-          <a class="navbar-brand" href="#">Food diary</a>
+          <a class="navbar-brand" href="http://127.0.0.1:8001/frontend/Brython-3.12.1/index.html">Food diary</a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
@@ -39,10 +39,31 @@
           </div>
         </div>
       </nav>
-<button class="btn btn-primary", id="register-btn">Register</button>
-<div id="request-result"></div>
+
+<div class="container-xxl my-md-4">
+    <form>
+        <div class="mb-3">
+            <labelclass="form-label">Username</label>
+            <input type="text" class="form-control" id="registerInputUsername">
+          </div>
+        <div class="mb-3">
+          <label class="form-label">Email address</label>
+          <input type="email" class="form-control" id="registerInputEmail" aria-describedby="emailHelp">
+          <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="registerInputPwd">
+        </div>
+        
+      </form>
+      <button class="btn btn-primary", id="register-btn">Register</button>
+    <div id="request-result"></div>
+    <a href="http://localhost:8000/frontend/Brython-3.12.1/demo.html">demo</a>   
+</div>
+
 <script type="text/python" src="register.py"></script>
 <script src="static/js/bootstrap.bundle.min.js"></script>
-<a href="http://localhost:8000/frontend/Brython-3.12.1/demo.html">demo</a>
+
 </body>
 </html>

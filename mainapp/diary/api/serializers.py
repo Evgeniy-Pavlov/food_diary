@@ -13,6 +13,18 @@ class UserRegisterSerializer(ModelSerializer):
         user.save()
         return user
 
+class UserGetInfoSerializer(ModelSerializer):
+    class Meta:
+        model = UserBase
+        fields = ('id', 'username', 'email')
+
+class UserGetInfoQueryParamSerializer(ModelSerializer):
+    username = CharField(required=True)
+    
+    class Meta:
+        model = UserBase
+        fields = ('username',)
+
 
 class UserChangePwdSerializer(ModelSerializer):
     username = CharField(required=True)

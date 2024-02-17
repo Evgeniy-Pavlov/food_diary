@@ -24,7 +24,7 @@ from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQue
      UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer, RecipeFoodCreateSerializer, \
      UserFoodDayDeleteSerializer, DirectoryFoodUserDeleteSerializer, DirectoryIngredientsDeleteSerializer, UserStatForDaySerializer, \
      UserStatForDayQueryParamSerializer, RecipeFoodDeleteSerializer, UserStatForPeriodQueryParamSerializer, UserStatForPeriodSerializer, \
-     UserFoodDayAddSerializer, UserChangePwdSerializer \
+     UserFoodDayAddSerializer, UserChangePwdSerializer, UserGetInfoSerializer, UserGetInfoQueryParamSerializer \
 
 CONFIG = dotenv_values(".env")
 
@@ -61,6 +61,19 @@ class UserChangePasswordView(UpdateAPIView):
             user.save()
             return Response({'success': 'Password change'}, status=HTTPStatus.OK)
         return Response({"error": "Form is not valid"}, status=HTTPStatus.BAD_REQUEST)
+
+class UserGetInfoView(APIView):
+    model = UserBase
+    serializer_class = UserGetInfoSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    @swagger_auto_schema(query_serializer=UserGetInfoQueryParamSerializer, 
+                            manual_parameters=[openapi.Parameter(name='username', in_=openapi.IN_QUERY,
+                            description='Username', type=openapi.TYPE_STRING, required=True)])
+    def get(self, request):
+        user = UserBase.objects.get(username=request.query_params['username'])
+        return Response(UserGetInfoSerializer(user, many=False).data)
+
 
 class FoodSearchView(APIView):
     """Представление поиска еды для авторизованного пользователя."""
