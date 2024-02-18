@@ -124,11 +124,39 @@ class FoodSearchView(APIView):
         return result
 
 
-class UserFoodAddView(CreateAPIView):
+class UserFoodAddView(APIView):
     """Представление добавления пользовательской еды."""
-    queryset = UserFoodDay.objects.all()
+    queryset = UserFoodDay
     serializer_class = UserFoodDayAddSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    @swagger_auto_schema(
+                            request_body=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                required= ['user', 'calories_burned'],
+                                properties=  {
+                                    'user' : openapi.Schema(type=openapi.TYPE_INTEGER), 
+                                    'food' : openapi.Schema(type=openapi.TYPE_INTEGER), 
+                                    'date': openapi.Schema(type=openapi.TYPE_STRING)
+                                }
+                            ))
+    def post(self, request):
+        user = UserBase.objects.get(id=request.data['user'])
+        food = DirectoryFood.objects.get(id=request.data['food'])
+        date = request.data['date']
+        food_day_create = UserFoodDay.objects.create(user=user, food=food, date=date)
+        stat = UserStat.objects.filter(user=user, date=date)
+        if len(stat):
+            result = UserStat.objects.get(user=user, date=date)
+            result.calories_burned += food.caloric
+            result.fat_burned += food.fat
+            result.protein_burned += food.protein
+            result.carbon_burned += food.carbon
+            result.save()
+            return Response(UserStatAddSerializer(result, many=False).data)
+        else:
+            result = UserStat.objects.create(user=user, calories_burned=food.caloric, fat_burned=food.fat, protein_burned=food.protein, carbon_burned=food.carbon)
+            return Response(UserStatAddSerializer(result, many=False).data)
 
 
 class UserFoodDeleteView(DestroyAPIView):

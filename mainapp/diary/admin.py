@@ -8,7 +8,7 @@ class AdminUser(admin.ModelAdmin):
 
 @admin.register(UserStat)
 class AdminUserStat(admin.ModelAdmin):
-    list_display = ('id', 'user', 'date', 'calories_burned')
+    list_display = ('id', 'user', 'date', 'calories_burned', 'fat_burned', 'protein_burned', 'carbon_burned')
 
 @admin.register(DirectoryFood)
 class AdminDirectoryFood(admin.ModelAdmin):

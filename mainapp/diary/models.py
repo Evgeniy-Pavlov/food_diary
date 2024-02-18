@@ -16,6 +16,9 @@ class UserStat(models.Model):
     user = models.ForeignKey(UserBase, on_delete=models.CASCADE, null=False)
     date = models.DateField(auto_now_add=True)
     calories_burned = models.IntegerField(default=0)
+    fat_burned = models.IntegerField(default=0)
+    protein_burned = models.IntegerField(default=0)
+    carbon_burned = models.IntegerField(default=0)
 
     class Meta:
         verbose_name_plural = 'UserStat'
