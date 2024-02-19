@@ -26,6 +26,14 @@ class UserGetInfoQueryParamSerializer(ModelSerializer):
         fields = ('username',)
 
 
+class RecipeGetQueryParamSerializer(ModelSerializer):
+    name = CharField(required=True)
+    
+    class Meta:
+        model = DirectoryFood
+        fields = ('name',)
+
+
 class UserChangePwdSerializer(ModelSerializer):
     username = CharField(required=True)
     old_password = CharField(required=True)

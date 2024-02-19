@@ -24,7 +24,7 @@ from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQue
      UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer, RecipeFoodCreateSerializer, \
      UserFoodDayDeleteSerializer, DirectoryFoodUserDeleteSerializer, DirectoryIngredientsDeleteSerializer, UserStatForDaySerializer, \
      UserStatForDayQueryParamSerializer, RecipeFoodDeleteSerializer, UserStatForPeriodQueryParamSerializer, UserStatForPeriodSerializer, \
-     UserFoodDayAddSerializer, UserChangePwdSerializer, UserGetInfoSerializer, UserGetInfoQueryParamSerializer \
+     UserFoodDayAddSerializer, UserChangePwdSerializer, UserGetInfoSerializer, UserGetInfoQueryParamSerializer, RecipeGetQueryParamSerializer \
 
 CONFIG = dotenv_values(".env")
 
@@ -47,6 +47,7 @@ class UserRegisterView(CreateAPIView):
 
 
 class UserChangePasswordView(UpdateAPIView):
+    """Представление изменения пароля учетной записи."""
     queryset = UserBase.objects.all()
     serializer_class = UserChangePwdSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
@@ -62,7 +63,9 @@ class UserChangePasswordView(UpdateAPIView):
             return Response({'success': 'Password change'}, status=HTTPStatus.OK)
         return Response({"error": "Form is not valid"}, status=HTTPStatus.BAD_REQUEST)
 
+
 class UserGetInfoView(APIView):
+    """Представление получения информации о пользователе."""
     model = UserBase
     serializer_class = UserGetInfoSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
@@ -71,8 +74,11 @@ class UserGetInfoView(APIView):
                             manual_parameters=[openapi.Parameter(name='username', in_=openapi.IN_QUERY,
                             description='Username', type=openapi.TYPE_STRING, required=True)])
     def get(self, request):
-        user = UserBase.objects.get(username=request.query_params['username'])
-        return Response(UserGetInfoSerializer(user, many=False).data)
+        try:
+            user = UserBase.objects.get(username=request.query_params['username'])
+            return Response(UserGetInfoSerializer(user, many=False).data)
+        except UserBase.DoesNotExist:
+            return Response({'error': 'Username not found'}, status=HTTPStatus.NOT_FOUND)
 
 
 class FoodSearchView(APIView):
@@ -128,7 +134,7 @@ class UserFoodAddView(APIView):
     """Представление добавления пользовательской еды."""
     queryset = UserFoodDay
     serializer_class = UserFoodDayAddSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (IsAuthenticated, )
 
     @swagger_auto_schema(
                             request_body=openapi.Schema(
@@ -155,7 +161,8 @@ class UserFoodAddView(APIView):
             result.save()
             return Response(UserStatAddSerializer(result, many=False).data)
         else:
-            result = UserStat.objects.create(user=user, calories_burned=food.caloric, fat_burned=food.fat, protein_burned=food.protein, carbon_burned=food.carbon)
+            result = UserStat.objects.create(user=user, calories_burned=food.caloric,\
+                fat_burned=food.fat, protein_burned=food.protein, carbon_burned=food.carbon)
             return Response(UserStatAddSerializer(result, many=False).data)
 
 
@@ -234,7 +241,8 @@ class RecipeCreateView(APIView):
                                 required= ['food', 'ingredients', 'user'],
                                 properties=  {
                                     'user': openapi.Schema(type=openapi.TYPE_INTEGER),
-                                    'food' : openapi.Schema(type=openapi.TYPE_STRING), 
+                                    'food' : openapi.Schema(type=openapi.TYPE_STRING),
+                                    'description': openapi.Schema(type=openapi.TYPE_STRING), 
                                     'ingredients': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_OBJECT, 
                                     required= ['ingredient', 'gram'],
                                         properties={  
@@ -250,7 +258,8 @@ class RecipeCreateView(APIView):
             food = DirectoryFood.objects.get(name=request.data['food'])
             return Response({'error': 'product was created previously'}, status=HTTPStatus.NOT_FOUND)
         except DirectoryFood.DoesNotExist:
-            food = DirectoryFood.objects.create(name=request.data['food'], user_create=UserBase.objects.get(id=request.data['user']))
+            food = DirectoryFood.objects.create(name=request.data['food'],\
+                 user_create=UserBase.objects.get(id=request.data['user']), description=request.data['description'])
             for ingredient in request.data['ingredients']:
                 try:
                     ing = DirectoryIngredients.objects.get(name=ingredient['ingredient'])
@@ -265,6 +274,7 @@ class RecipeCreateView(APIView):
                     return Response({'error': 'ingredient not found'}, status=HTTPStatus.NOT_FOUND)
 
 class RecipeDeleteView(DestroyAPIView):
+    """Представление удаления рецепта."""
     queryset = RecipeFood.objects.all()
     serializer_class = RecipeFoodDeleteSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
@@ -289,7 +299,8 @@ class UserGetStatForDayView(APIView):
             result = UserStat.objects.get(date=request.query_params['date'], user=UserBase.objects.get(id=request.query_params['user']))
             return Response(UserStatForDaySerializer(result, many=False).data)
         except UserStat.DoesNotExist:
-            return Response({"user": request.query_params['user'], "date": request.query_params['date'], "calories_burned": 0}, status=HTTPStatus.NOT_FOUND)
+            return Response({"user": request.query_params['user'],\
+                "date": request.query_params['date'], "calories_burned": 0}, status=HTTPStatus.NOT_FOUND)
 
 
 class UserGetStatForPeriodView(APIView):
@@ -422,3 +433,26 @@ class UserFoodDayStatPeriodView(APIView):
             return FileResponse(buf, as_attachment=True, filename=f'food_stat_for_period_{start_date}-{date_end}.pdf')
         else:
             return Response(UserFoodDaySerializer(result, many=True).data)
+
+
+class FoodGetRecipeView(APIView):
+    model = RecipeFood
+    serializer_class = RecipeFoodCreateSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    @swagger_auto_schema(   query_serializer= RecipeGetQueryParamSerializer,
+                            manual_parameters=[openapi.Parameter(name='name', in_=openapi.IN_QUERY,
+                            description='Name food',
+                            type=openapi.TYPE_STRING,
+                            required=True),])
+    def get(self, request):
+        food = DirectoryFood.objects.get(name=request.query_params['name'])
+        ingredients = RecipeFood.objects.filter(food=food)
+        if len(ingredients):
+            result = {'food': food.name, 'recipe': food.description, 'ingredients': []}
+            for ing in ingredients:
+                item = {'ingredient name': ing.ingredient.name, 'gram': ing.gram}
+                result['ingredients'].append(item)
+            return Response(result, status=HTTPStatus.OK)
+        else:
+            return Response({'error': 'this food not have recipe'}, status=HTTPStatus.NOT_FOUND)

@@ -131,6 +131,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'LOGIN_URL': 'api/auth',
+    'LOGOUT_URL': 'api/logout',
+    'SECURITY_DEFINITIONS': {
+        "http": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }},}
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

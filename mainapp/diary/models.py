@@ -30,6 +30,7 @@ class DirectoryFood(models.Model):
     carbon = models.IntegerField(default=0)
     protein = models.IntegerField(default=0)
     user_create = models.ForeignKey(UserBase, on_delete=models.SET_NULL, null=True)
+    description = models.CharField(max_length=2000, null=True)
 
     class Meta:
         verbose_name_plural = 'DirectoryFood'
