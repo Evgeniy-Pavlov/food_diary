@@ -3,8 +3,6 @@ import io
 import csv
 from http import HTTPStatus
 import requests
-import pandas as pd
-import seaborn as sns
 from dotenv import dotenv_values
 from drf_yasg import openapi
 from django.db.models import Q
@@ -16,6 +14,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab import rl_config
 from reportlab.platypus import Table, SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 from django.http import HttpResponse, FileResponse
@@ -24,6 +23,7 @@ from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView, 
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from diary.models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients, RecipeFood
 from django.db.utils import IntegrityError
+from mainapp.settings import BASE_DIR
 from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQueryParamSerializer, UserFoodDaySerializer, \
      UserStatAddSerializer, DirectoryFoodUserCreateSerializer, DirectoryIngredientsCreateSerializer, RecipeFoodCreateSerializer, \
      UserFoodDayDeleteSerializer, DirectoryFoodUserDeleteSerializer, DirectoryIngredientsDeleteSerializer, UserStatForDaySerializer, \
@@ -35,9 +35,10 @@ CONFIG = dotenv_values(".env")
 
 styles = getSampleStyleSheet()
 
-styles['Normal'].fontName='Arial'
-styles['Heading1'].fontName = 'Arial'
-pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
+styles['Normal'].fontName='Arimo'
+styles['Heading1'].fontName = 'Arimo'
+rl_config.TTFSearchPath.append(str(BASE_DIR) + '/mainapp/font')
+pdfmetrics.registerFont(TTFont('Arimo', 'Arimo-VariableFont_wght.ttf'))
 
 
 class UserLoginView(LoginView):
