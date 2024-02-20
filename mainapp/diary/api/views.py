@@ -14,7 +14,8 @@ from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Table, SimpleDocTemplate
+from reportlab.platypus import Table, SimpleDocTemplate, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
 from django.http import HttpResponse, FileResponse
 from django.contrib.auth.views import LoginView, LogoutView
 from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView, UpdateAPIView
@@ -28,6 +29,13 @@ from .serializers import UserRegisterSerializer, SearchFoodSerializer, SearchQue
      UserFoodDayAddSerializer, UserChangePwdSerializer, UserGetInfoSerializer, UserGetInfoQueryParamSerializer, RecipeGetQueryParamSerializer \
 
 CONFIG = dotenv_values(".env")
+
+
+styles = getSampleStyleSheet()
+
+styles['Normal'].fontName='Arial'
+styles['Heading1'].fontName = 'Arial'
+pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
 
 
 class UserLoginView(LoginView):
@@ -342,12 +350,17 @@ class UserGetStatForPeriodView(APIView):
             return response
         elif 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
             buf = io.BytesIO()
+            story = []
+            title=f'Your report on calories/fat/protein/carbon received the period from {start_date} to {date_end}'
+            story.append(Paragraph(title, styles['Normal']))
             data = [('id', 'username', 'data', 'calories', 'fat', 'protein', 'carbon')]
             for i in result:
                 data.append((i.id, i.user, i.date, i.calories_burned,  i.fat_burned, i.protein_burned, i.carbon_burned))
             doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5, topMargin=0.3, bottomMargin=0)
             table = Table(data, hAlign='CENTER')
-            doc.build([table])
+            story.append(table)
+            
+            doc.build(story)
             buf.seek(0)
             return FileResponse(buf, as_attachment=True, filename=f'calories_stat_for_period_{start_date}-{date_end}.pdf')
         else:
@@ -412,18 +425,16 @@ class UserFoodDayStatPeriodView(APIView):
             return response
         elif 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
             buf = io.BytesIO()
-            canv = canvas.Canvas(buf, pagesize=letter, bottomup=0)
-            textob = canv.beginText()
-            textob.setTextOrigin(inch, inch)
-            pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
-            textob.setFont('Arial', 14)
-            textob.textLine(f'Your report on dishes eaten during the period from {start_date} to {date_end}')
-            textob.textLine(f'id | food id | user id | date | food name | caloric | fat | protein | carbon')
+            story = []
+            data = [('id', 'food id', 'user id', 'date', 'food name', 'caloric', 'fat', 'protein', 'carbon')]
             for i in result:
-                textob.textLine(f'{i.id} | {i.food.id} | {i.user} | {i.date} | {i.food.name} | {i.food.caloric} | {i.food.fat} | {i.food.protein} | {i.food.carbon}')
-            canv.drawText(textob)
-            canv.showPage()
-            canv.save()
+                data.append((i.id, i.food, i.user, i.date,  Paragraph(i.food.name, styles['Normal']), i.food.caloric, i.food.fat, i.food.protein, i.food.carbon))
+            doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5, topMargin=0.3, bottomMargin=0,)
+            title=f'Your report on dishes eaten during the period from {start_date} to {date_end}'
+            table = Table(data, hAlign='CENTER')
+            story.append(Paragraph(title, styles['Normal']))
+            story.append(table)
+            doc.build(story)
             buf.seek(0)
             return FileResponse(buf, as_attachment=True, filename=f'food_stat_for_period_{start_date}-{date_end}.pdf')
         else:
