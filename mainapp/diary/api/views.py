@@ -3,6 +3,8 @@ import io
 import csv
 from http import HTTPStatus
 import requests
+import pandas as pd
+import seaborn as sns
 from dotenv import dotenv_values
 from drf_yasg import openapi
 from django.db.models import Q
@@ -359,7 +361,6 @@ class UserGetStatForPeriodView(APIView):
             doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5, topMargin=0.3, bottomMargin=0)
             table = Table(data, hAlign='CENTER')
             story.append(table)
-            
             doc.build(story)
             buf.seek(0)
             return FileResponse(buf, as_attachment=True, filename=f'calories_stat_for_period_{start_date}-{date_end}.pdf')
@@ -446,11 +447,14 @@ class FoodGetRecipeView(APIView):
     serializer_class = RecipeFoodCreateSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
-    @swagger_auto_schema(   query_serializer= RecipeGetQueryParamSerializer,
+    @swagger_auto_schema(query_serializer= RecipeGetQueryParamSerializer,
                             manual_parameters=[openapi.Parameter(name='name', in_=openapi.IN_QUERY,
                             description='Name food',
                             type=openapi.TYPE_STRING,
-                            required=True),])
+                            required=True), openapi.Parameter(name='pdf_file', in_=openapi.IN_QUERY,
+                            description='Recipe download pdf_file',
+                            type=openapi.TYPE_BOOLEAN,
+                            required=False)])
     def get(self, request):
         food = DirectoryFood.objects.get(name=request.query_params['name'])
         ingredients = RecipeFood.objects.filter(food=food)
@@ -459,6 +463,23 @@ class FoodGetRecipeView(APIView):
             for ing in ingredients:
                 item = {'ingredient name': ing.ingredient.name, 'gram': ing.gram}
                 result['ingredients'].append(item)
-            return Response(result, status=HTTPStatus.OK)
+            if 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
+                buf = io.BytesIO()
+                story = []
+                doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5, topMargin=0.3, bottomMargin=0,)
+                title=f'Recipe of {food.name}'
+                story.append(Paragraph(title, styles['Normal']))
+                story.append(Paragraph(result['recipe'], styles['Normal'])) if result['recipe']\
+                    else story.append(Paragraph('Not description', styles['Normal']))
+                table_data = [('ingredient', 'gram')]
+                for i in result['ingredients']:
+                    table_data.append((Paragraph(i['ingredient name'], styles['Normal']), i['gram']))
+                table = Table(table_data, hAlign='CENTER')
+                story.append(table)
+                doc.build(story)
+                buf.seek(0)
+                return FileResponse(buf, as_attachment=True, filename=f'recipe_{food.name}.pdf')
+            else:
+                return Response(result, status=HTTPStatus.OK)
         else:
             return Response({'error': 'this food not have recipe'}, status=HTTPStatus.NOT_FOUND)
