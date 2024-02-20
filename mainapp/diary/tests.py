@@ -71,15 +71,15 @@ class TestUserStatFodDay(TestCase):
         food = DirectoryFood.objects.create(name = 'Test_food', caloric= 100, fat = 200, protein = 300, carbon = 400)
         user_auth = self.client.post('/api/auth', json.dumps({'username': user.username, 'password': data['password']}), content_type='application/json')
         token = user_auth.json()['access']
-        data = {'food': food.id, 'user': user.id}
-        response = self.client.post('/api/user/foodstat/add', json.dumps(data), content_type='application/json',\
-             headers={'Authorization': f'Bearer {token}'})
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        result = response.json()
-        self.assertEqual(result['user'], user.id)
-        self.assertEqual(result['food'], food.id)
         today = datetime.datetime.today()
         time = today.strftime('%Y-%m-%d')
+        data = {'food': food.id, 'user': user.id, 'date': time}
+        response = self.client.post('/api/user/foodstat/add', json.dumps(data), content_type='application/json',\
+             headers={'Authorization': f'Bearer {token}'})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        result = response.json()
+        self.assertEqual(result['user'], user.id)
+        self.assertEqual(result['calories_burned'], food.caloric)
         self.assertEqual(result['date'], time)
 
 
