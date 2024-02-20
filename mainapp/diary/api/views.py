@@ -14,6 +14,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import Table, SimpleDocTemplate
 from django.http import HttpResponse, FileResponse
 from django.contrib.auth.views import LoginView, LogoutView
 from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView, UpdateAPIView
@@ -335,24 +336,18 @@ class UserGetStatForPeriodView(APIView):
             response = HttpResponse(content_type="text/csv", headers={"Content-Disposition": f'attachment; filename="calories_stat_for\
             _period_{start_date}-{date_end}.csv"'},)
             writer = csv.writer(response)
-            writer.writerow(['id', 'user', 'date', 'calories_burned'])
+            writer.writerow(['id', 'user', 'date', 'calories_burned', 'fat_burned', 'protein_burned', 'carbon_birned'])
             for i in result:
-                writer.writerow([i.id, i.user, i.date, i.calories_burned])
+                writer.writerow([i.id, i.user, i.date, i.calories_burned, i.fat_burned, i.protein_burned, i.carbon_burned])
             return response
         elif 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
             buf = io.BytesIO()
-            canv = canvas.Canvas(buf, pagesize=letter, bottomup=0)
-            textob = canv.beginText()
-            textob.setTextOrigin(inch, inch)
-            pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
-            textob.setFont('Arial', 14)
-            textob.textLine(f'Your calorie report for the period from {start_date} to {date_end}')
-            textob.textLine(f'id | user_id | date | callories')
+            data = [('id', 'username', 'data', 'calories', 'fat', 'protein', 'carbon')]
             for i in result:
-                textob.textLine(f'{i.id} | {i.user} | {i.date} | {i.calories_burned}')
-            canv.drawText(textob)
-            canv.showPage()
-            canv.save()
+                data.append((i.id, i.user, i.date, i.calories_burned,  i.fat_burned, i.protein_burned, i.carbon_burned))
+            doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5, topMargin=0.3, bottomMargin=0)
+            table = Table(data, hAlign='CENTER')
+            doc.build([table])
             buf.seek(0)
             return FileResponse(buf, as_attachment=True, filename=f'calories_stat_for_period_{start_date}-{date_end}.pdf')
         else:
