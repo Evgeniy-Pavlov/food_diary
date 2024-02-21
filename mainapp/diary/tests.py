@@ -3,9 +3,7 @@ import datetime
 from http import HTTPStatus
 from django.test import TestCase
 from .models import UserBase, DirectoryFood, UserFoodDay, UserStat, DirectoryIngredients, RecipeFood
-from diary.api.views import UserRegisterView, FoodSearchView, UserFoodAddView, UserStatAddView, DirectoryFoodUserCreateView, DirectoryIngredientsCreateView, \
-    RecipeCreateView, UserFoodDeleteView, DirectoryFoodUserDeleteView, DirectoryIngredientsDeleteView, UserGetStatForDayView, RecipeDeleteView, \
-    UserGetStatForPeriodView, UserFoodDayStatView, UserFoodDayStatPeriodView \
+
 
 # Create your tests here.
 class TestUserRegister(TestCase):
