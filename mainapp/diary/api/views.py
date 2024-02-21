@@ -311,20 +311,21 @@ class UserGetStatForDayView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
     @swagger_auto_schema(query_serializer=UserStatForDayQueryParamSerializer, 
-                            manual_parameters=[openapi.Parameter(name='date', in_=openapi.IN_QUERY,
-                            description='DateField for get stat on how much user eat',
-                            type=openapi.TYPE_STRING,
-                            required=True), openapi.Parameter(name='user', in_=openapi.IN_QUERY,
-                            description='User id',
-                            type=openapi.TYPE_INTEGER,
-                            required=True)])
+            manual_parameters=[openapi.Parameter(name='date', in_=openapi.IN_QUERY,
+            description='DateField for get stat on how much user eat',
+            type=openapi.TYPE_STRING, required=True), 
+            openapi.Parameter(name='user', in_=openapi.IN_QUERY,
+            description='User id', type=openapi.TYPE_INTEGER, required=True)])
     def get(self, request):
+        """Реализация GET метода класса получения статистики за день."""
         try:
-            result = UserStat.objects.get(date=request.query_params['date'], user=UserBase.objects.get(id=request.query_params['user']))
+            result = UserStat.objects.get(date=request.query_params['date'],\
+                user=UserBase.objects.get(id=request.query_params['user']))
             return Response(UserStatForDaySerializer(result, many=False).data)
         except UserStat.DoesNotExist:
             return Response({"user": request.query_params['user'],\
-                "date": request.query_params['date'], "calories_burned": 0}, status=HTTPStatus.NOT_FOUND)
+                "date": request.query_params['date'], "calories_burned": 0},\
+                status=HTTPStatus.NOT_FOUND)
 
 
 class UserGetStatForPeriodView(APIView):
@@ -334,49 +335,54 @@ class UserGetStatForPeriodView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
     @swagger_auto_schema(query_serializer=UserStatForPeriodQueryParamSerializer, 
-                            manual_parameters=[openapi.Parameter(name='date_start', in_=openapi.IN_QUERY,
-                            description='Start DateField for get stat on how much user eat',
-                            type=openapi.TYPE_STRING,
-                            required=True), openapi.Parameter(name='date_end', in_=openapi.IN_QUERY,
-                            description='End DateField for get stat on how much user eat',
-                            type=openapi.TYPE_STRING,
-                            required=True), openapi.Parameter(name='user', in_=openapi.IN_QUERY,
-                            description='User id',
-                            type=openapi.TYPE_INTEGER,
-                            required=True), openapi.Parameter(name='csv_file', in_=openapi.IN_QUERY,
-                            description='return csv file',
-                            type=openapi.TYPE_BOOLEAN,
-                            required=False), openapi.Parameter(name='pdf_file', in_=openapi.IN_QUERY,
-                            description='return pdf file',
-                            type=openapi.TYPE_BOOLEAN,
-                            required=False)])
+            manual_parameters=[openapi.Parameter(name='date_start', in_=openapi.IN_QUERY,
+            description='Start DateField for get stat on how much user eat',
+            type=openapi.TYPE_STRING, required=True), 
+            openapi.Parameter(name='date_end', in_=openapi.IN_QUERY,
+            description='End DateField for get stat on how much user eat',
+            type=openapi.TYPE_STRING, required=True), 
+            openapi.Parameter(name='user', in_=openapi.IN_QUERY,
+            description='User id', type=openapi.TYPE_INTEGER,
+            required=True), openapi.Parameter(name='csv_file', in_=openapi.IN_QUERY,
+            description='return csv file', type=openapi.TYPE_BOOLEAN,
+            required=False), openapi.Parameter(name='pdf_file', in_=openapi.IN_QUERY,
+            description='return pdf file', type=openapi.TYPE_BOOLEAN, required=False)])
     def get(self, request):
-        result = UserStat.objects.filter(date__range=(request.query_params['date_start'], request.query_params['date_end']),
+        """Реализация GET метода класса получения статистики за период."""
+        result = UserStat.objects.filter(date__range=(request.query_params['date_start'],\
+            request.query_params['date_end']),
             user=UserBase.objects.get(id=request.query_params['user']))
         start_date = request.query_params['date_start']
         date_end = request.query_params['date_end']
         if 'csv_file' in request.query_params and request.query_params['csv_file'] == 'true':
-            response = HttpResponse(content_type="text/csv", headers={"Content-Disposition": f'attachment; filename="calories_stat_for\
-            _period_{start_date}-{date_end}.csv"'},)
+            response = HttpResponse(content_type="text/csv", \
+                headers={"Content-Disposition": f'attachment; filename="calories_stat_for\
+                _period_{start_date}-{date_end}.csv"'},)
             writer = csv.writer(response)
-            writer.writerow(['id', 'user', 'date', 'calories_burned', 'fat_burned', 'protein_burned', 'carbon_birned'])
+            writer.writerow(['id', 'user', 'date', 'calories_burned',\
+                'fat_burned', 'protein_burned', 'carbon_birned'])
             for i in result:
-                writer.writerow([i.id, i.user, i.date, i.calories_burned, i.fat_burned, i.protein_burned, i.carbon_burned])
+                writer.writerow([i.id, i.user, i.date, i.calories_burned,\
+                    i.fat_burned, i.protein_burned, i.carbon_burned])
             return response
         elif 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
             buf = io.BytesIO()
             story = []
-            title=f'Your report on calories/fat/protein/carbon received the period from {start_date} to {date_end}'
+            title=f'Your report on calories/fat/protein/carbon \
+                received the period from {start_date} to {date_end}'
             story.append(Paragraph(title, styles['Normal']))
             data = [('id', 'username', 'data', 'calories', 'fat', 'protein', 'carbon')]
             for i in result:
-                data.append((i.id, i.user, i.date, i.calories_burned,  i.fat_burned, i.protein_burned, i.carbon_burned))
-            doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5, topMargin=0.3, bottomMargin=0)
+                data.append((i.id, i.user, i.date, i.calories_burned,\
+                    i.fat_burned, i.protein_burned, i.carbon_burned))
+            doc = SimpleDocTemplate(buf, rightMargin=0,\
+                leftMargin=6.5, topMargin=0.3, bottomMargin=0)
             table = Table(data, hAlign='CENTER')
             story.append(table)
             doc.build(story)
             buf.seek(0)
-            return FileResponse(buf, as_attachment=True, filename=f'calories_stat_for_period_{start_date}-{date_end}.pdf')
+            return FileResponse(buf, as_attachment=True, \
+                filename=f'calories_stat_for_period_{start_date}-{date_end}.pdf')
         else:
             return Response(UserStatForPeriodSerializer(result, many=True).data)
 
@@ -387,15 +393,15 @@ class UserFoodDayStatView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
     @swagger_auto_schema(query_serializer=UserStatForDayQueryParamSerializer, 
-                            manual_parameters=[openapi.Parameter(name='date', in_=openapi.IN_QUERY,
-                            description='DateField for get stat on how much user eat',
-                            type=openapi.TYPE_STRING,
-                            required=True), openapi.Parameter(name='user', in_=openapi.IN_QUERY,
-                            description='User id',
-                            type=openapi.TYPE_INTEGER,
-                            required=True)])
+                manual_parameters=[openapi.Parameter(name='date', in_=openapi.IN_QUERY,
+                description='DateField for get stat on how much user eat',
+                type=openapi.TYPE_STRING, required=True), 
+                openapi.Parameter(name='user', in_=openapi.IN_QUERY,
+                description='User id', type=openapi.TYPE_INTEGER, required=True)])
     def get(self, request):
-        result = UserFoodDay.objects.filter(date=request.query_params['date'], user=UserBase.objects.get(id=request.query_params['user']))\
+        """Реализация GET метода класса получения блюд пользователя за день."""
+        result = UserFoodDay.objects.filter(date=request.query_params['date'],\
+            user=UserBase.objects.get(id=request.query_params['user']))\
             .select_related('food')
         return Response(UserFoodDaySerializer(result, many=True).data)
 
@@ -406,54 +412,61 @@ class UserFoodDayStatPeriodView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
     @swagger_auto_schema(query_serializer=UserStatForPeriodQueryParamSerializer, 
-                            manual_parameters=[openapi.Parameter(name='date_start', in_=openapi.IN_QUERY,
-                            description='Start DateField for get stat on how much user eat',
-                            type=openapi.TYPE_STRING,
-                            required=True), openapi.Parameter(name='date_end', in_=openapi.IN_QUERY,
-                            description='End DateField for get stat on how much user eat',
-                            type=openapi.TYPE_STRING,
-                            required=True), openapi.Parameter(name='user', in_=openapi.IN_QUERY,
-                            description='User id',
-                            type=openapi.TYPE_INTEGER,
-                            required=True), openapi.Parameter(name='csv_file', in_=openapi.IN_QUERY,
-                            description='return csv file',
-                            type=openapi.TYPE_BOOLEAN,
-                            required=False), openapi.Parameter(name='pdf_file', in_=openapi.IN_QUERY,
-                            description='return pdf file',
-                            type=openapi.TYPE_BOOLEAN,
-                            required=False)])
+            manual_parameters=[openapi.Parameter(name='date_start', in_=openapi.IN_QUERY,
+            description='Start DateField for get stat on how much user eat',
+            type=openapi.TYPE_STRING, required=True), 
+            openapi.Parameter(name='date_end', in_=openapi.IN_QUERY,
+            description='End DateField for get stat on how much user eat',
+            type=openapi.TYPE_STRING, required=True), 
+            openapi.Parameter(name='user', in_=openapi.IN_QUERY,
+            description='User id', type=openapi.TYPE_INTEGER, required=True), 
+            openapi.Parameter(name='csv_file', in_=openapi.IN_QUERY,
+            description='return csv file', type=openapi.TYPE_BOOLEAN, required=False), 
+            openapi.Parameter(name='pdf_file', in_=openapi.IN_QUERY,
+            description='return pdf file',
+            type=openapi.TYPE_BOOLEAN, required=False)])
     def get(self, request):
-        result = UserFoodDay.objects.filter(date__range=(request.query_params['date_start'], request.query_params['date_end']),
+        """Реализация GET метода класса получения блюд пользователя за период."""
+        result = UserFoodDay.objects.filter(date__range=(request.query_params['date_start'],\
+            request.query_params['date_end']),
          user=UserBase.objects.get(id=request.query_params['user'])).select_related('food')
         start_date = request.query_params['date_start']
         date_end = request.query_params['date_end']
         if 'csv_file' in request.query_params and request.query_params['csv_file'] == 'true':
-            response = HttpResponse(content_type="text/csv", headers={"Content-Disposition": f'attachment; filename="userfoodday_stat_for\
-            _period_{start_date}-{date_end}.csv"'},)
+            response = HttpResponse(content_type="text/csv", \
+                headers={"Content-Disposition": f'attachment; filename="userfoodday_stat_for\
+                _period_{start_date}-{date_end}.csv"'},)
             writer = csv.writer(response)
-            writer.writerow(['id', 'food id', 'username', 'date', 'name of food', 'caloric', 'fat', 'protein', 'carbon'])
+            writer.writerow(['id', 'food id', 'username', 'date', 'name of food', 'caloric',\
+                'fat', 'protein', 'carbon'])
             for i in result:
-                writer.writerow([i.id, i.food.id, i.user, i.date, i.food.name, i.food.caloric, i.food.fat, i.food.protein, i.food.carbon])
+                writer.writerow([i.id, i.food.id, i.user, i.date, i.food.name, i.food.caloric,\
+                    i.food.fat, i.food.protein, i.food.carbon])
             return response
         elif 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
             buf = io.BytesIO()
             story = []
-            data = [('id', 'food id', 'user id', 'date', 'food name', 'caloric', 'fat', 'protein', 'carbon')]
+            data = [('id', 'food id', 'user id', 'date', 'food name', 'caloric', 'fat',\
+                'protein', 'carbon')]
             for i in result:
-                data.append((i.id, i.food, i.user, i.date,  Paragraph(i.food.name, styles['Normal']), i.food.caloric, i.food.fat, i.food.protein, i.food.carbon))
-            doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5, topMargin=0.3, bottomMargin=0,)
+                data.append((i.id, i.food, i.user, i.date,  Paragraph(i.food.name,\
+                    styles['Normal']), i.food.caloric, i.food.fat, i.food.protein, i.food.carbon))
+            doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5,\
+                topMargin=0.3, bottomMargin=0,)
             title=f'Your report on dishes eaten during the period from {start_date} to {date_end}'
             table = Table(data, hAlign='CENTER')
             story.append(Paragraph(title, styles['Normal']))
             story.append(table)
             doc.build(story)
             buf.seek(0)
-            return FileResponse(buf, as_attachment=True, filename=f'food_stat_for_period_{start_date}-{date_end}.pdf')
+            return FileResponse(buf, as_attachment=True,\
+                filename=f'food_stat_for_period_{start_date}-{date_end}.pdf')
         else:
             return Response(UserFoodDaySerializer(result, many=True).data)
 
 
 class FoodGetRecipeView(APIView):
+    """Представление получения рецепта."""
     model = RecipeFood
     serializer_class = RecipeFoodCreateSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
@@ -467,6 +480,7 @@ class FoodGetRecipeView(APIView):
                             type=openapi.TYPE_BOOLEAN,
                             required=False)])
     def get(self, request):
+        """Реализация GET метода класса получения рецепта."""
         food = DirectoryFood.objects.get(name=request.query_params['name'])
         ingredients = RecipeFood.objects.filter(food=food)
         if len(ingredients):
@@ -477,14 +491,16 @@ class FoodGetRecipeView(APIView):
             if 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
                 buf = io.BytesIO()
                 story = []
-                doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5, topMargin=0.3, bottomMargin=0,)
+                doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5,\
+                    topMargin=0.3, bottomMargin=0,)
                 title=f'Recipe of {food.name}'
                 story.append(Paragraph(title, styles['Normal']))
                 story.append(Paragraph(result['recipe'], styles['Normal'])) if result['recipe']\
                     else story.append(Paragraph('Not description', styles['Normal']))
                 table_data = [('ingredient', 'gram')]
                 for i in result['ingredients']:
-                    table_data.append((Paragraph(i['ingredient name'], styles['Normal']), i['gram']))
+                    table_data.append((Paragraph(i['ingredient name'],\
+                        styles['Normal']), i['gram']))
                 table = Table(table_data, hAlign='CENTER')
                 story.append(table)
                 doc.build(story)

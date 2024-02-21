@@ -15,14 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
-from diary.api.views import UserLoginView, UserLogoutView, UserRegisterView, FoodSearchView, UserFoodAddView, UserStatAddView,\
-    DirectoryFoodUserCreateView, DirectoryIngredientsCreateView, RecipeCreateView, UserFoodDeleteView, DirectoryFoodUserDeleteView, \
-    DirectoryIngredientsDeleteView, UserGetStatForDayView, RecipeDeleteView, UserGetStatForPeriodView, UserFoodDayStatView, UserFoodDayStatPeriodView, \
+from rest_framework_simplejwt.views import TokenObtainPairView,\
+    TokenRefreshView, TokenBlacklistView
+from diary.api.views import UserLoginView, UserLogoutView,\
+    UserRegisterView, FoodSearchView, UserFoodAddView, UserStatAddView,\
+    DirectoryFoodUserCreateView, DirectoryIngredientsCreateView,\
+    RecipeCreateView, UserFoodDeleteView, DirectoryFoodUserDeleteView, \
+    DirectoryIngredientsDeleteView, UserGetStatForDayView, RecipeDeleteView,\
+    UserGetStatForPeriodView, UserFoodDayStatView, UserFoodDayStatPeriodView, \
     UserChangePasswordView, UserGetInfoView, FoodGetRecipeView \
 
 schema_view = get_schema_view(
@@ -51,17 +55,23 @@ urlpatterns = [
     path('api/food/search', FoodSearchView.as_view(), name='search_food'),
     path('api/user/foodstat/add', UserFoodAddView.as_view(), name='food_add_in_stat'),
     path('api/user/foodstat/day', UserFoodDayStatView.as_view(), name='food_stat_for_day'),
-    path('api/user/foodstat/period', UserFoodDayStatPeriodView.as_view(), name='food_stat_for_period'),
-    path('api/user/foodstat/delete/<int:pk>', UserFoodDeleteView.as_view(), name='food_delete_in_stat'),
+    path('api/user/foodstat/period', UserFoodDayStatPeriodView.as_view(),\
+        name='food_stat_for_period'),
+    path('api/user/foodstat/delete/<int:pk>', UserFoodDeleteView.as_view(),\
+        name='food_delete_in_stat'),
     path('api/user/userstat/add', UserStatAddView.as_view(), name='user_calories_food_add'),
     path('api/food/add', DirectoryFoodUserCreateView.as_view(), name='create_food_user'),
-    path('api/food/delete/<int:pk>', DirectoryFoodUserDeleteView.as_view(), name='delete_food_user'),
-    path('api/food/ingredients/add', DirectoryIngredientsCreateView.as_view(), name = 'create_ingredients_in_the_directory'),
-    path('api/food/ingredients/delete/<int:pk>', DirectoryIngredientsDeleteView.as_view(), name = 'delete_ingredients_in_the_directory'),
+    path('api/food/delete/<int:pk>', DirectoryFoodUserDeleteView.as_view(),\
+        name='delete_food_user'),
+    path('api/food/ingredients/add', DirectoryIngredientsCreateView.as_view(),\
+        name = 'create_ingredients_in_the_directory'),
+    path('api/food/ingredients/delete/<int:pk>', DirectoryIngredientsDeleteView.as_view(),\
+        name = 'delete_ingredients_in_the_directory'),
     path('api/food/recipe/create', RecipeCreateView.as_view(), name = 'create_recipe'),
     path('api/food/recipe/delete/<int:pk>', RecipeDeleteView.as_view(), name = 'delete_recipe'),
     path('api/user/stat-for-day', UserGetStatForDayView.as_view(), name = 'stat_for_day_user'),
-    path('api/user/stat-for-period', UserGetStatForPeriodView.as_view(), name = 'stat_for_period_user'),
+    path('api/user/stat-for-period', UserGetStatForPeriodView.as_view(),\
+        name = 'stat_for_period_user'),
     path('api/user/userinfo', UserGetInfoView.as_view(), name= 'get_info_for_user'),
     path('api/food/get-recipe', FoodGetRecipeView.as_view(), name= 'get_recipe_food')
 ]

@@ -1,3 +1,4 @@
+"""Модуль с объявленными приложениями."""
 from django.apps import AppConfig
 
 
