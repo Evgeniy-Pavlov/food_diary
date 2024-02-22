@@ -127,7 +127,9 @@ class TestFoodStatAdd(TestCase):
         """Позитивный сценарий добавления статистики по блюдам пользователя."""
         response = self.client.post('/api/user/userstat/add',\
             json.dumps({'user': self.user.id, 'calories_burned': self.food_1.caloric,\
-            'date': self.time}), content_type='application/json',\
+            'fat_burned': self.food_1.fat, 'protein_burned': self.food_1.protein, \
+            'carbon_burned': self.food_1.carbon, 'date': self.time}),\
+            content_type='application/json',\
             headers={'Authorization': f'Bearer {self.token}'})
         self.assertEqual(response.status_code, HTTPStatus.OK)
         result = response.json()
@@ -136,7 +138,9 @@ class TestFoodStatAdd(TestCase):
         self.assertEqual(result['calories_burned'], self.food_1.caloric)
         response = self.client.post('/api/user/userstat/add',\
             json.dumps({'user': self.user.id, 'calories_burned': self.food_2.caloric,\
-            'date': self.time}), content_type='application/json',\
+            'fat_burned': self.food_2.fat, 'protein_burned': self.food_2.protein, \
+            'carbon_burned': self.food_1.carbon, 'date': self.time}), \
+            content_type='application/json',\
             headers={'Authorization': f'Bearer {self.token}'})
         self.assertEqual(response.status_code, HTTPStatus.OK)
         result = response.json()
