@@ -164,7 +164,7 @@ class UserFoodAddView(APIView):
     @swagger_auto_schema(
                             request_body=openapi.Schema(
                                 type=openapi.TYPE_OBJECT,
-                                required= ['user', 'calories_burned'],
+                                required= ['user', 'food'],
                                 properties=  {
                                     'user' : openapi.Schema(type=openapi.TYPE_INTEGER), 
                                     'food' : openapi.Schema(type=openapi.TYPE_INTEGER), 
@@ -208,11 +208,15 @@ class UserStatAddView(APIView):
     @swagger_auto_schema(
                             request_body=openapi.Schema(
                                 type=openapi.TYPE_OBJECT,
-                                required= ['user', 'calories_burned'],
+                                required= ['user', 'calories_burned', 'fat_burned', 'protein_burned',
+                                'carbon_burned'],
                                 properties=  {
                                     'user' : openapi.Schema(type=openapi.TYPE_INTEGER), 
                                     'calories_burned' : openapi.Schema(type=openapi.TYPE_INTEGER),
-                                    'date': openapi.Schema(type=openapi.TYPE_STRING)
+                                    'fat_burned': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'protein_burned': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'carbon_burned': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    'date': openapi.Schema(type=openapi.TYPE_STRING),
                                 }
                             ))
     def post(self, request):
@@ -223,11 +227,16 @@ class UserStatAddView(APIView):
             result = UserStat.objects.get(user=UserBase.objects.get(id=request.data['user']),\
                 date=request.data['date'])
             result.calories_burned += request.data['calories_burned']
+            result.fat_burned += request.data['fat_burned']
+            result.protein_burned += request.data['protein_burned']
+            result.carbon_burned += request.data['carbon_burned']
             result.save()
             return Response(UserStatAddSerializer(result, many=False).data)
         else:
             result = UserStat.objects.create(user=UserBase.objects.get(\
-                id=request.data['user']), calories_burned=request.data['calories_burned'])
+                id=request.data['user']), calories_burned=request.data['calories_burned'],
+                fat_burned=request.data['fat_burned'], protein_burned=request.data['protein_burned'],
+                carbon_burned=request.data['carbon_burned'])
             return Response(UserStatAddSerializer(result, many=False).data)
 
 
