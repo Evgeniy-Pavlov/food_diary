@@ -205,20 +205,16 @@ class UserStatAddView(APIView):
     serializer_class= UserStatAddSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
-    @swagger_auto_schema(
-                            request_body=openapi.Schema(
-                                type=openapi.TYPE_OBJECT,
-                                required= ['user', 'calories_burned', 'fat_burned', 'protein_burned',
-                                'carbon_burned'],
-                                properties=  {
-                                    'user' : openapi.Schema(type=openapi.TYPE_INTEGER), 
-                                    'calories_burned' : openapi.Schema(type=openapi.TYPE_INTEGER),
-                                    'fat_burned': openapi.Schema(type=openapi.TYPE_INTEGER),
-                                    'protein_burned': openapi.Schema(type=openapi.TYPE_INTEGER),
-                                    'carbon_burned': openapi.Schema(type=openapi.TYPE_INTEGER),
-                                    'date': openapi.Schema(type=openapi.TYPE_STRING),
-                                }
-                            ))
+    @swagger_auto_schema(request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT, required= ['user',\
+            'calories_burned', 'fat_burned', 'protein_burned','carbon_burned'],
+            properties=  {
+            'user' : openapi.Schema(type=openapi.TYPE_INTEGER), 
+            'calories_burned' : openapi.Schema(type=openapi.TYPE_INTEGER),
+            'fat_burned': openapi.Schema(type=openapi.TYPE_INTEGER),
+            'protein_burned': openapi.Schema(type=openapi.TYPE_INTEGER),
+            'carbon_burned': openapi.Schema(type=openapi.TYPE_INTEGER),
+            'date': openapi.Schema(type=openapi.TYPE_STRING),}))
     def post(self, request):
         """Реализация метода POST для представления."""
         stat = UserStat.objects.filter(user=UserBase.objects.get(id=request.data['user']),\
@@ -235,7 +231,8 @@ class UserStatAddView(APIView):
         else:
             result = UserStat.objects.create(user=UserBase.objects.get(\
                 id=request.data['user']), calories_burned=request.data['calories_burned'],
-                fat_burned=request.data['fat_burned'], protein_burned=request.data['protein_burned'],
+                fat_burned=request.data['fat_burned'],
+                protein_burned=request.data['protein_burned'],
                 carbon_burned=request.data['carbon_burned'])
             return Response(UserStatAddSerializer(result, many=False).data)
 
@@ -296,15 +293,15 @@ class RecipeCreateView(APIView):
             for ingredient in request.data['ingredients']:
                 try:
                     ing = DirectoryIngredients.objects.get(name=ingredient['ingredient'])
-                    RecipeFood.objects.create(food=food, ingredient=ing)
+                    RecipeFood.objects.create(food=food, ingredient=ing, gram=ingredient['gram'])
                     food.caloric += ing.caloric * (ingredient['gram'] * 0.01)
                     food.fat += ing.fat * (ingredient['gram'] * 0.01)
                     food.protein += ing.protein * (ingredient['gram'] * 0.01)
                     food.carbon += ing.carbon * (ingredient['gram'] * 0.01)
                     food.save()
-                    return Response({'success': 'recipe create'}, status=HTTPStatus.CREATED)
                 except DirectoryIngredients.DoesNotExist:
                     return Response({'error': 'ingredient not found'}, status=HTTPStatus.NOT_FOUND)
+            return Response({'success': 'recipe create'}, status=HTTPStatus.CREATED)
 
 class RecipeDeleteView(DestroyAPIView):
     """Представление удаления рецепта."""
@@ -519,3 +516,45 @@ class FoodGetRecipeView(APIView):
                 return Response(result, status=HTTPStatus.OK)
         else:
             return Response({'error': 'this food not have recipe'}, status=HTTPStatus.NOT_FOUND)
+
+class RecipeUpdateView(APIView):
+    """Представление обновления рецепта."""
+    model = RecipeFood
+    serializer_class = RecipeFoodCreateSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    @swagger_auto_schema(request_body=openapi.Schema(
+    type=openapi.TYPE_OBJECT, required= ['food', 'ingredients', 'user'],
+    properties=  {'user': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'food' : openapi.Schema(type=openapi.TYPE_STRING),
+                'description': openapi.Schema(type=openapi.TYPE_STRING), 
+                'ingredients': openapi.Schema(type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(type=openapi.TYPE_OBJECT, 
+                required= ['ingredient', 'gram'],
+                properties={'ingredient': openapi.Schema(type=openapi.TYPE_STRING),
+                'gram': openapi.Schema(type=openapi.TYPE_INTEGER)}))}))
+    def post(self, request):
+        """Реализация метода POST для представления."""
+        try:
+            food = DirectoryFood.objects.get(name=request.data['food'])
+            if 'description' in request.data:
+                food.description = request.data['description']
+            ingredients = RecipeFood.objects.filter(food=food)
+            for ingredient in request.data['ingredients']:
+                try:
+                    ing = DirectoryIngredients.objects.get(name=ingredient['ingredient'])
+                except DirectoryIngredients.DoesNotExist:
+                    return Response({'error': 'ingredient not found'},status=HTTPStatus.NOT_FOUND)
+            ingredients.delete()
+            for ingredient in request.data['ingredients']:
+                ing = DirectoryIngredients.objects.get(name=ingredient['ingredient'])
+                RecipeFood.objects.create(food=food, ingredient=ing, gram=ingredient['gram'])
+                food.caloric += ing.caloric * (ingredient['gram'] * 0.01)
+                food.fat += ing.fat * (ingredient['gram'] * 0.01)
+                food.protein += ing.protein * (ingredient['gram'] * 0.01)
+                food.carbon += ing.carbon * (ingredient['gram'] * 0.01)
+                food.save()
+                return Response({'success': 'recipe create'}, status=HTTPStatus.CREATED)
+        except DirectoryFood.DoesNotExist:
+            return Response({'error': 'food not found'},status=HTTPStatus.NOT_FOUND)
+            
