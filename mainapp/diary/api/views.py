@@ -305,7 +305,7 @@ class RecipeCreateView(APIView):
 
 class RecipeDeleteView(DestroyAPIView):
     """Представление удаления рецепта."""
-    queryset = RecipeFood.objects.all()
+    queryset = DirectoryFood.objects.all()
     serializer_class = RecipeFoodDeleteSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
@@ -557,4 +557,3 @@ class RecipeUpdateView(APIView):
                 return Response({'success': 'recipe create'}, status=HTTPStatus.CREATED)
         except DirectoryFood.DoesNotExist:
             return Response({'error': 'food not found'},status=HTTPStatus.NOT_FOUND)
-            
