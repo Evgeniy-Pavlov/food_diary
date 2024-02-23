@@ -10,6 +10,7 @@ class UserBase(AbstractUser):
     username = models.CharField(unique=True, max_length=40)
     date_create = models.DateField(default=datetime.now)
     email = models.EmailField(unique=True)
+    recommended_calories = models.IntegerField(null=True)
 
     class Meta:
         """Метакласс таблицы пользователей."""

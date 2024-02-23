@@ -557,3 +557,35 @@ class RecipeUpdateView(APIView):
                 return Response({'success': 'recipe create'}, status=HTTPStatus.CREATED)
         except DirectoryFood.DoesNotExist:
             return Response({'error': 'food not found'},status=HTTPStatus.NOT_FOUND)
+
+class UserRecCaloriesView(APIView):
+    """Представление расчета количества калорий для пользователя на день.
+    Расчет происзводится по формуле  Миффлина – Сан Жеору"""
+    model = UserBase
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    @swagger_auto_schema(request_body=openapi.Schema(
+    type=openapi.TYPE_OBJECT, required= ['user', 'weight', 'years', 'height', 'gender'],
+    properties=  {'user': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'weight' : openapi.Schema(type=openapi.TYPE_INTEGER),
+                'years' : openapi.Schema(type=openapi.TYPE_INTEGER),
+                'height' : openapi.Schema(type=openapi.TYPE_INTEGER),
+                'gender' : openapi.Schema(type=openapi.TYPE_STRING, description='MALE or FEMALE')
+                }))
+    def post(self, request):
+        """Реализация метода POST для представления."""
+        try:
+            user = UserBase.objects.get(id=request.data['user'])
+        except UserBase.DoesNotExist:
+            return Response({'error': 'user not found'},status=HTTPStatus.NOT_FOUND)
+        weight = request.data['weight']
+        height = request.data['height']
+        years = request.data['years']
+        if request.data['gender'] == 'MALE':
+            result = 10 * weight + 6.25 * height - 5 * years + 5
+        elif request.data['gender'] == 'FEMALE':
+            result = 10 * weight + 6.25 * height - 5 * years - 161
+        else:
+            return Response({'error': 'calculation cannot be performed'},status=HTTPStatus.BAD_REQUEST)
+        user.recommended_calories = result
+        return Response({'success': f'recommended calories: {result}'}, status=HTTPStatus.OK)

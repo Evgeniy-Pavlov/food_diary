@@ -27,7 +27,8 @@ from diary.api.views import UserLoginView, UserLogoutView,\
     RecipeCreateView, UserFoodDeleteView, DirectoryFoodUserDeleteView, \
     DirectoryIngredientsDeleteView, UserGetStatForDayView, RecipeDeleteView,\
     UserGetStatForPeriodView, UserFoodDayStatView, UserFoodDayStatPeriodView, \
-    UserChangePasswordView, UserGetInfoView, FoodGetRecipeView, RecipeUpdateView \
+    UserChangePasswordView, UserGetInfoView, FoodGetRecipeView, RecipeUpdateView, \
+    UserRecCaloriesView \
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -75,4 +76,5 @@ urlpatterns = [
     path('api/user/userinfo', UserGetInfoView.as_view(), name= 'get_info_for_user'),
     path('api/food/get-recipe', FoodGetRecipeView.as_view(), name= 'get_recipe_food'),
     path('api/food/recipe/update', RecipeUpdateView.as_view(), name = 'update_recipe'),
+    path('api/user/calc/calories', UserRecCaloriesView.as_view(), name = 'calc_calories'),
 ]
