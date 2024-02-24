@@ -8,6 +8,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib import colors
 from reportlab import rl_config
 from reportlab.platypus import Table, SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
@@ -383,7 +384,7 @@ class UserGetStatForPeriodView(APIView):
                     i.fat_burned, i.protein_burned, i.carbon_burned))
             doc = SimpleDocTemplate(buf, rightMargin=0,\
                 leftMargin=6.5, topMargin=0.3, bottomMargin=0)
-            table = Table(data, hAlign='CENTER')
+            table = Table(data, hAlign='CENTER', style=[('GRID', (0,0), (-1,-1), 0.25, colors.black),])
             story.append(table)
             doc.build(story)
             buf.seek(0)
@@ -460,7 +461,7 @@ class UserFoodDayStatPeriodView(APIView):
             doc = SimpleDocTemplate(buf, rightMargin=0, leftMargin=6.5,\
                 topMargin=0.3, bottomMargin=0,)
             title=f'Your report on dishes eaten during the period from {start_date} to {date_end}'
-            table = Table(data, hAlign='CENTER')
+            table = Table(data, hAlign='CENTER', style=[('GRID', (0,0), (-1,-1), 0.25, colors.black),])
             story.append(Paragraph(title, styles['Normal']))
             story.append(table)
             doc.build(story)
@@ -507,7 +508,7 @@ class FoodGetRecipeView(APIView):
                 for i in result['ingredients']:
                     table_data.append((Paragraph(i['ingredient name'],\
                         styles['Normal']), i['gram']))
-                table = Table(table_data, hAlign='CENTER')
+                table = Table(table_data, hAlign='CENTER', style=[('GRID', (0,0), (-1,-1), 0.25, colors.black),])
                 story.append(table)
                 doc.build(story)
                 buf.seek(0)
