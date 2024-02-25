@@ -364,16 +364,25 @@ class UserGetStatForPeriodView(APIView):
             user=UserBase.objects.get(id=request.query_params['user']))
         start_date = request.query_params['date_start']
         date_end = request.query_params['date_end']
+        user=UserBase.objects.get(id=request.query_params['user'])
         if 'csv_file' in request.query_params and request.query_params['csv_file'] == 'true':
             response = HttpResponse(content_type="text/csv", \
                 headers={"Content-Disposition": f'attachment; filename="calories_stat_for\
                 _period_{start_date}-{date_end}.csv"'},)
             writer = csv.writer(response)
-            writer.writerow(['id', 'user', 'date', 'calories_burned',\
-                'fat_burned', 'protein_burned', 'carbon_birned'])
-            for i in result:
-                writer.writerow([i.id, i.user, i.date, i.calories_burned,\
-                    i.fat_burned, i.protein_burned, i.carbon_burned])
+            if user.recommended_calories:
+                writer.writerow(['id', 'user', 'date', 'calories_burned',\
+                    'fat_burned', 'protein_burned', 'carbon_burned', 'balance'])
+                for i in result:
+                    balance = user.recommended_calories - i.calories_burned
+                    writer.writerow([i.id, i.user, i.date, i.calories_burned,\
+                        i.fat_burned, i.protein_burned, i.carbon_burned, balance])
+            else:
+                writer.writerow(['id', 'user', 'date', 'calories_burned',\
+                'fat_burned', 'protein_burned', 'carbon_burned'])
+                for i in result:
+                    writer.writerow([i.id, i.user, i.date, i.calories_burned,\
+                        i.fat_burned, i.protein_burned, i.carbon_burned])
             return response
         elif 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
             buf = io.BytesIO()
@@ -381,10 +390,17 @@ class UserGetStatForPeriodView(APIView):
             title=f'Your report on calories/fat/protein/carbon \
                 received the period from {start_date} to {date_end}'
             story.append(Paragraph(title, styles['Normal']))
-            data = [('id', 'username', 'data', 'calories', 'fat', 'protein', 'carbon')]
-            for i in result:
-                data.append((i.id, i.user, i.date, i.calories_burned,\
-                    i.fat_burned, i.protein_burned, i.carbon_burned))
+            if user.recommended_calories:
+                data = [('id', 'username', 'data', 'calories', 'fat', 'protein', 'carbon', 'balance')]
+                for i in result:
+                    balance = user.recommended_calories - i.calories_burned
+                    data.append((i.id, i.user, i.date, i.calories_burned,\
+                        i.fat_burned, i.protein_burned, i.carbon_burned, balance))
+            else:
+                data = [('id', 'username', 'data', 'calories', 'fat', 'protein', 'carbon')]
+                for i in result:
+                    data.append((i.id, i.user, i.date, i.calories_burned,\
+                        i.fat_burned, i.protein_burned, i.carbon_burned))
             doc = SimpleDocTemplate(buf, rightMargin=0,\
                 leftMargin=6.5, topMargin=0.3, bottomMargin=0)
             table = Table(data, hAlign='CENTER', style=[('GRID', (0,0), (-1,-1), 0.25, colors.black),])
@@ -448,10 +464,10 @@ class UserFoodDayStatPeriodView(APIView):
                 _period_{start_date}-{date_end}.csv"'},)
             writer = csv.writer(response)
             writer.writerow(['id', 'food id', 'username', 'date', 'name of food', 'caloric',\
-                'fat', 'protein', 'carbon'])
+                    'fat', 'protein', 'carbon'])
             for i in result:
                 writer.writerow([i.id, i.food.id, i.user, i.date, i.food.name, i.food.caloric,\
-                    i.food.fat, i.food.protein, i.food.carbon])
+                    i.food.fat, i.food.protein, i.food.carbon])    
             return response
         elif 'pdf_file' in request.query_params and request.query_params['pdf_file'] == 'true':
             buf = io.BytesIO()
@@ -592,4 +608,5 @@ class UserRecCaloriesView(APIView):
         else:
             return Response({'error': 'calculation cannot be performed'},status=HTTPStatus.BAD_REQUEST)
         user.recommended_calories = result
+        user.save()
         return Response({'success': f'recommended calories: {result}'}, status=HTTPStatus.OK)
