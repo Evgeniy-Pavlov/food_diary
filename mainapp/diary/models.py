@@ -1,5 +1,5 @@
 """Модуль с классами описывающими таблицы БД."""
-from datetime import datetime
+from datetime import datetime, date
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -20,7 +20,7 @@ class UserStat(models.Model):
     """Таблица статистики пользователя по калориям,
     жирам, белкам и углеводам за день."""
     user = models.ForeignKey(UserBase, on_delete=models.CASCADE, null=False)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField(default=date.today())
     calories_burned = models.IntegerField(default=0)
     fat_burned = models.IntegerField(default=0)
     protein_burned = models.IntegerField(default=0)
@@ -48,7 +48,7 @@ class UserFoodDay(models.Model):
     """Таблица блюд пользователя за день."""
     food = models.ForeignKey(DirectoryFood, on_delete=models.CASCADE)
     user = models.ForeignKey(UserBase, on_delete=models.CASCADE)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField(default=date.today())
 
     class Meta:
         """Метакласс таблицы еды пользователя за день."""

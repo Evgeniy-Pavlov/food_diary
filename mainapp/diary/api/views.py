@@ -1,6 +1,7 @@
 """Модуль представлений django приложения."""
 import io
 import csv
+import datetime
 from http import HTTPStatus
 import requests
 from dotenv import dotenv_values
@@ -176,21 +177,23 @@ class UserFoodAddView(APIView):
         """Реализация метода POST для представления."""
         user = UserBase.objects.get(id=request.data['user'])
         food = DirectoryFood.objects.get(id=request.data['food'])
-        date = request.data['date']
+        today = datetime.datetime.today()
+        time = today.strftime('%Y-%m-%d')
+        date = request.data['date'] if 'date' in request.data else time
         UserFoodDay.objects.create(user=user, food=food, date=date)
-        stat = UserStat.objects.filter(user=user, date=date)
-        if len(stat):
+        try:
             result = UserStat.objects.get(user=user, date=date)
             result.calories_burned += food.caloric
             result.fat_burned += food.fat
             result.protein_burned += food.protein
             result.carbon_burned += food.carbon
             result.save()
-            return Response(UserStatAddSerializer(result, many=False).data)
-        else:
+        except UserStat.DoesNotExist:
             result = UserStat.objects.create(user=user, calories_burned=food.caloric,\
-                fat_burned=food.fat, protein_burned=food.protein, carbon_burned=food.carbon)
+                fat_burned=food.fat, protein_burned=food.protein, carbon_burned=food.carbon, \
+                date=date)
             return Response(UserStatAddSerializer(result, many=False).data)
+        return Response(UserStatAddSerializer(result, many=False).data)
 
 
 class UserFoodDeleteView(DestroyAPIView):
